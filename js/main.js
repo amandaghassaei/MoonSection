@@ -27,7 +27,11 @@ for (var i=0;i<10;i++){
         squareGeo.vertices.push(new THREE.Vector3());
     }
 }
-var cropLine = new THREE.Line(squareGeo, new THREE.LineBasicMaterial({color:0xff00ff}));
+var cropLine = new THREE.Line(squareGeo, new THREE.LineBasicMaterial({color:0xec008b}));
+
+var axis = new THREE.Line(new THREE.Geometry(), new THREE.LineBasicMaterial({color:0xaaaaaa}));
+axis.geometry.vertices.push(new THREE.Vector3(0,0,1));
+axis.geometry.vertices.push(new THREE.Vector3(0,0,-1));
 
 
 function updateCrop(){
@@ -77,6 +81,7 @@ function updateCrop(){
 }
 
 function updateGeo(makeFaces){
+    axis.scale.set(1,1,radius*1.5);
      for (var i=0;i<imgWidth;i++){
         var theta = 2*Math.PI*i/imgWidth;
         var sinTheta = Math.sin(theta);
@@ -143,6 +148,8 @@ $(function() {
     threeView.scene.add(cropCenter.object3D);
     threeView.scene.add(cropLine);
 
+    threeView.scene.add(axis);
+
     updateGeo(true);
 
     // var topPole = new THREE.Vector3(0,0,radius);
@@ -168,7 +175,9 @@ $(function() {
     document.addEventListener('mouseup', function(e){
         isDragging = false;
         threeView.enableControls(true);
+        axis.visible = false
         mouseDown = false;
+        threeView.render();
     }, false);
     document.addEventListener( 'mousemove', mouseMove, false );
     function mouseMove(e){
@@ -177,6 +186,9 @@ $(function() {
             isDragging = true;
         }
 
+        var shouldRender = axis.visible != isDragging && !highlightedObj;
+        axis.visible = isDragging && !highlightedObj;
+
         e.preventDefault();
         mouse.x = (e.clientX/window.innerWidth)*2-1;
         mouse.y = - (e.clientY/window.innerHeight)*2+1;
@@ -184,18 +196,27 @@ $(function() {
 
         var intersection = raycaster.intersectObject(moon);
         if (intersection.length == 0){
-            cropCenter.hide();
+            if (cropCenter.object3D.visible){
+                cropCenter.hide();
+                threeView.render();
+            }
         } else if (intersection[0].point.clone().sub(cropCenter.object3D.position).lengthSq()>100000){
-            cropCenter.hide();
+            if (cropCenter.object3D.visible){
+                cropCenter.hide();
+                threeView.render();
+            }
         } else {
-            cropCenter.show();
+            if (!cropCenter.object3D.visible) {
+                cropCenter.show();
+                threeView.render();
+            }
         }
 
         var _highlightedObj = null;
         if (!isDragging) {
             _highlightedObj = checkForIntersections(e, cropCenter.object3D);
             setHighlightedObj(_highlightedObj);
-        }  else if (isDragging && highlightedObj){
+        } else if (isDragging && highlightedObj){
             if (intersection.length>0){
                 var position = intersection[0].point;
                 cropCenter.render(position.clone());
@@ -209,15 +230,17 @@ $(function() {
                 $("#phi").val(phi.toFixed(2));
             }
         }
+        if(shouldRender) threeView.render();
     }
     function setHighlightedObj(object){
         if (highlightedObj && (object != highlightedObj)) {
             highlightedObj.unhighlight();
             // globals.controls.hideMoreInfo();
         }
+        var shouldRender = highlightedObj != object;
         highlightedObj = object;
         if (highlightedObj) highlightedObj.highlight();
-        threeView.render();
+        if (shouldRender) threeView.render();
     }
 
     function checkForIntersections(e, object){

@@ -2,8 +2,8 @@
  * Created by ghassaei on 9/16/16.
  */
 
-var nodeMaterial = new THREE.MeshBasicMaterial({color: 0xff00ff});
-var nodeMaterialHighlight = new THREE.MeshBasicMaterial({color: 0xffddff, side:THREE.DoubleSide});
+var nodeMaterial = new THREE.MeshBasicMaterial({color: 0xec008b});
+var nodeMaterialHighlight = new THREE.MeshBasicMaterial({color: 0xffd8ef, side:THREE.DoubleSide});
 var nodeGeo = new THREE.SphereGeometry(1,20);
 
 function Node(position, index){
