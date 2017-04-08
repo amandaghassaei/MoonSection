@@ -15,7 +15,7 @@ var cropSize = 700;
 var imgWidth = 1000;
 var imgHeight = 500;
 
-var imgdata, threeView;
+var imgdata, threeView, moon;
 
 var geometry = new THREE.Geometry();
 geometry.dynamic = true;
@@ -32,6 +32,19 @@ var cropLine = new THREE.Line(squareGeo, new THREE.LineBasicMaterial({color:0xec
 var axis = new THREE.Line(new THREE.Geometry(), new THREE.LineBasicMaterial({color:0xaaaaaa}));
 axis.geometry.vertices.push(new THREE.Vector3(0,0,1));
 axis.geometry.vertices.push(new THREE.Vector3(0,0,-1));
+
+var useNormalMaterial = false;
+var moonMaterial = new THREE.MeshLambertMaterial({color:0xffffff, shading:THREE.FlatShading});
+var normalMaterial = new THREE.MeshNormalMaterial();
+
+function changeMaterial(){
+    if (useNormalMaterial){
+        moon.material = normalMaterial;
+    } else {
+        moon.material = moonMaterial;
+    }
+    threeView.render();
+}
 
 
 function updateCrop(){
@@ -142,7 +155,7 @@ $(function() {
     context.drawImage(img, 0, 0, imgWidth, imgHeight);
     imgdata = context.getImageData(0, 0, imgWidth, imgHeight).data;
 
-    var moon = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({color:0xffffff, shading:THREE.FlatShading}));
+    moon = new THREE.Mesh(geometry, moonMaterial);
     threeView.scene.add(moon);
 
     threeView.scene.add(cropCenter.object3D);

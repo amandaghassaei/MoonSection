@@ -40,7 +40,6 @@ body{
     top:0;
     left:0;
     /*width: 420px;*/
-    margin-top:53px;
     padding:20px 20px;
     max-height: 100%;
     overflow: auto;
@@ -205,7 +204,7 @@ span.modal-close{
 }
 
 .checkbox input.custom-checkbox[type="checkbox"]:checked + .icons .icon-checked, .radio input.custom-checkbox[type="checkbox"]:checked + .icons .icon-checked, .checkbox input.custom-radio[type="radio"]:checked + .icons .icon-checked, .radio input.custom-radio[type="radio"]:checked + .icons .icon-checked {
-    color: #666;
+    color: #fff;
 }
 
 .radio .icon-checked{

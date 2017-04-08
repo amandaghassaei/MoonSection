@@ -46,6 +46,11 @@ function initControls(){
         updateCrop();
     });
 
+    setRadio("materialType", "white", function(val){
+        useNormalMaterial = val == "normal";
+        changeMaterial();
+    });
+
     function setButtonGroup(id, callback){
         $(id+" a").click(function(e){
             e.preventDefault();
