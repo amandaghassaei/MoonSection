@@ -6,6 +6,7 @@ html{
 }
 
 body{
+    color:#bbb;
     width:100%;
     height:100%;
     padding:0;
@@ -79,31 +80,6 @@ a.btn:visited, a.btn:focus{
     color: white;
 }
 
-.editable{
-    color:#34495e;
-    height: 42px;
-    display: inline-block;
-    line-height: 42px;
-    width: 70px;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    white-space:nowrap
-}
-.editable:hover{
-    color:#34495e;
-    cursor: text;
-}
-.editableInput{
-    display: none;
-    outline: grey;
-    padding: 5px 7px;
-    height: 42px;
-    line-height: 42px;
-}
-.editableInput:focus {
-    outline: grey;
-    border:none;
-}
 #controls .radio{
     height: 42px;
 display: inline-block;

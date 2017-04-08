@@ -14,6 +14,7 @@ function initThreeView() {
     var animationRunning = false;
     var pauseFlag = false;
 
+
     init();
 
     function init() {
@@ -23,27 +24,17 @@ function initThreeView() {
         container.append(renderer.domElement);
 
         scene.background = new THREE.Color(0x000000);
-        var directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
-        directionalLight1.position.set(0, 100, 0);
-        scene.add(directionalLight1);
-        var directionalLight4 = new THREE.DirectionalLight(0xffffff, 0.3);
-        directionalLight4.position.set(0, -100, 0);
-        scene.add(directionalLight4);
-        var directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.8);
-        directionalLight2.position.set(100, -30, 0);
-        scene.add(directionalLight2);
-        var directionalLight3 = new THREE.DirectionalLight(0xffffff, 0.8);
-        directionalLight3.position.set(-100, -30, 0);
-        scene.add(directionalLight3);
-        //scene.fog = new THREE.FogExp2(0xf4f4f4, 1.7);
-        //renderer.setClearColor(scene.fog.color);
+        var directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.7);
+        directionalLight1.position.set(-10000, 10000, 10000);
+        camera.add(directionalLight1);
+        scene.add(new THREE.AmbientLight(0x000044, 0.2));
 
-        // scene.add(camera);
+        scene.add(camera);
 
         camera.zoom = 0.14;
         camera.position.x = 4000;
-        camera.position.y = 4000;
-        camera.position.z = 4000;
+        camera.position.y = 0;
+        camera.position.z = 0;
         camera.lookAt(new THREE.Vector3(0,0,0));
         camera.updateProjectionMatrix();
 
@@ -55,7 +46,7 @@ function initThreeView() {
         controls.panSpeed = 0.8;
 
         controls.noZoom = false;
-        controls.noPan = false;
+        controls.noPan = true;
 
         controls.staticMoving = true;
         controls.dynamicDampingFactor = 0.3;
