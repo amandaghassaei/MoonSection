@@ -10,7 +10,7 @@ var scale = defaultScale;
 
 var cropPosition = new THREE.Vector3(0, Math.PI/2);//theta, phi
 var cropRotation = 0;
-var cropSize = 10;
+var cropSize = 700;
 
 var imgWidth = 1000;
 var imgHeight = 500;
@@ -21,12 +21,58 @@ var geometry = new THREE.Geometry();
 geometry.dynamic = true;
 
 var cropCenter = new Node(new THREE.Vector3());
+var squareGeo = new THREE.Geometry();
+for (var i=0;i<10;i++){
+    for (var j=0;j<4;j++){
+        squareGeo.vertices.push(new THREE.Vector3());
+    }
+}
+var cropLine = new THREE.Line(squareGeo, new THREE.LineBasicMaterial({color:0xff00ff}));
+
 
 function updateCrop(){
-    cropCenter.render(new THREE.Vector3(radius*Math.sin(cropPosition.y)*Math.cos(cropPosition.x),
-        radius*Math.sin(cropPosition.y)*Math.sin(cropPosition.x),
-        radius*Math.cos(cropPosition.y))
-    );
+    var rad = radius + scale*127;
+    cropCenter.object3D.scale.set(radius/50, radius/50, radius/50);
+    var centerPosition = new THREE.Vector3(rad*Math.sin(cropPosition.y)*Math.cos(cropPosition.x),
+        rad*Math.sin(cropPosition.y)*Math.sin(cropPosition.x),
+        rad*Math.cos(cropPosition.y));
+    cropCenter.render(centerPosition.clone());
+
+    centerPosition.normalize();
+    //tangent plane
+    var a = centerPosition.x;
+    var b = centerPosition.y;
+    var c = centerPosition.z;
+    var d = -a*a-b*b-c*c;
+
+    var basis1 = new THREE.Vector3(1, 0, 0);
+    var basis2 = new THREE.Vector3(0, 1, 0);
+    var quaternion = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1), centerPosition);
+    var quaternion2 = new THREE.Quaternion().setFromAxisAngle(centerPosition, cropRotation+Math.atan2(cropPosition.x, cropPosition.y));
+    basis1.applyQuaternion(quaternion);
+    basis1.applyQuaternion(quaternion2);
+    basis2.applyQuaternion(quaternion);
+    basis2.applyQuaternion(quaternion2);
+
+    centerPosition.multiplyScalar(rad);
+
+    basis1.multiplyScalar(cropSize);
+    basis2.multiplyScalar(cropSize);
+
+    squareGeo.vertices[0].set(centerPosition.x + basis1.x,centerPosition.y + basis1.y,centerPosition.z + basis1.z);
+    squareGeo.vertices[1].set(centerPosition.x + basis2.x,centerPosition.y + basis2.y,centerPosition.z + basis2.z);
+    squareGeo.vertices[2].set(centerPosition.x -basis1.x,centerPosition.y -basis1.y,centerPosition.z -basis1.z);
+    squareGeo.vertices[3].set(centerPosition.x -basis2.x,centerPosition.y -basis2.y,centerPosition.z -basis2.z);
+
+    squareGeo.computeBoundingSphere();
+    squareGeo.verticesNeedUpdate = true;
+
+    // for (var i=0;i<10;i++){
+    //     for (var j=0;j<4;j++){
+    //         var theta = j%2*cropAngle;
+    //         cropSquare.vertices[4*i + j].set(j%2*cropSize, (j+1)%2*cropSize, );
+    //     }
+    // }
     threeView.render();
 }
 
@@ -95,6 +141,7 @@ $(function() {
     threeView.scene.add(moon);
 
     threeView.scene.add(cropCenter.object3D);
+    threeView.scene.add(cropLine);
 
     updateGeo(true);
 
@@ -135,12 +182,20 @@ $(function() {
         mouse.y = - (e.clientY/window.innerHeight)*2+1;
         raycaster.setFromCamera(mouse, threeView.camera);
 
+        var intersection = raycaster.intersectObject(moon);
+        if (intersection.length == 0){
+            cropCenter.hide();
+        } else if (intersection[0].point.clone().sub(cropCenter.object3D.position).lengthSq()>100000){
+            cropCenter.hide();
+        } else {
+            cropCenter.show();
+        }
+
         var _highlightedObj = null;
         if (!isDragging) {
             _highlightedObj = checkForIntersections(e, cropCenter.object3D);
             setHighlightedObj(_highlightedObj);
         }  else if (isDragging && highlightedObj){
-            var intersection = raycaster.intersectObject(moon);
             if (intersection.length>0){
                 var position = intersection[0].point;
                 cropCenter.render(position.clone());

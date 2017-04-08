@@ -4,7 +4,7 @@
 
 var nodeMaterial = new THREE.MeshBasicMaterial({color: 0xff00ff});
 var nodeMaterialHighlight = new THREE.MeshBasicMaterial({color: 0xffddff, side:THREE.DoubleSide});
-var nodeGeo = new THREE.SphereGeometry(30,20);
+var nodeGeo = new THREE.SphereGeometry(1,20);
 
 function Node(position, index){
 
@@ -31,6 +31,10 @@ Node.prototype.unhighlight = function(){
 
 Node.prototype.hide = function(){
     this.object3D.visible = false;
+};
+
+Node.prototype.show = function(){
+    this.object3D.visible = true;
 };
 
 Node.prototype.render = function(position){

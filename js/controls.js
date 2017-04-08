@@ -9,12 +9,12 @@ function initControls(){
         $('#aboutModal').modal('show');
     });
 
-    setSliderInput("#radius", radius, 100, 10000, 1, function(val){
+    setSliderInputStop("#radius", radius, 100, 10000, 1, function(val){
         radius = val;
         updateGeo();
     });
 
-    setSliderInput("#scale", scale*255, 0, 400, 1, function(val){
+    setSliderInputStop("#scale", scale*255, 0, 400, 1, function(val){
         scale = val/255;
         updateGeo();
     });
@@ -36,12 +36,12 @@ function initControls(){
         updateCrop();
     }, -Math.PI/2, Math.PI/2);
 
-    setSliderInput("#cropSize", cropSize, 1, 200, 0.1, function(val){
+    setSliderInput("#cropSize", cropSize, 100, 2000, 0.1, function(val){
         cropSize = val;
         updateCrop();
     });
 
-    setSliderInput("#cropRotation", cropRotation, 0, 2*Math.PI, 0.1, function(val){
+    setSliderInput("#cropRotation", cropRotation, 0, 2*Math.PI, 0.01, function(val){
         cropRotation = val;
         updateCrop();
     });
@@ -168,7 +168,7 @@ function initControls(){
         $input.val(val.toFixed(2));
     }
 
-    function setSliderInput(id, val, min, max, incr, callback){
+    function setSliderInputStop(id, val, min, max, incr, callback){
 
         var slider = $(id+">div").slider({
             orientation: 'horizontal',
@@ -199,6 +199,43 @@ function initControls(){
         });
         $input.val(val.toFixed(2));
         slider.on("slidestop", function(e, ui){
+            var val = ui.value;
+            $input.val(val);
+            callback(val);
+        });
+    }
+
+    function setSliderInput(id, val, min, max, incr, callback){
+
+        var slider = $(id+">div").slider({
+            orientation: 'horizontal',
+            range: false,
+            value: val,
+            min: min,
+            max: max,
+            step: incr
+        });
+
+        var $input = $(id+">input");
+        $input.change(function(){
+            var val = $input.val();
+            if ($input.hasClass("int")){
+                if (isNaN(parseInt(val))) return;
+                val = parseInt(val);
+            } else {
+                if (isNaN(parseFloat(val))) return;
+                val = parseFloat(val);
+            }
+
+            var min = slider.slider("option", "min");
+            if (val < min) val = min;
+            if (val > max) val = max;
+            $input.val(val);
+            slider.slider('value', val);
+            callback(val);
+        });
+        $input.val(val.toFixed(2));
+        slider.on("slide", function(e, ui){
             var val = ui.value;
             $input.val(val);
             callback(val);
