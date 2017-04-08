@@ -48,7 +48,7 @@ function updateCrop(){
     var basis1 = new THREE.Vector3(1, 0, 0);
     var basis2 = new THREE.Vector3(0, 1, 0);
     var quaternion = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1), centerPosition);
-    var quaternion2 = new THREE.Quaternion().setFromAxisAngle(centerPosition, cropRotation+Math.atan2(cropPosition.x, cropPosition.y));
+    var quaternion2 = new THREE.Quaternion().setFromAxisAngle(centerPosition, cropRotation+cropPosition.x);
     basis1.applyQuaternion(quaternion);
     basis1.applyQuaternion(quaternion2);
     basis2.applyQuaternion(quaternion);
