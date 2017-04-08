@@ -8,6 +8,10 @@ var defaultScale = 19.91/255;
 var radius = defaultRadius;
 var scale = defaultScale;
 
+var cropPosition = new THREE.Vector3(0, Math.PI/2);//theta, phi
+var cropRotation = 0;
+var cropSize = 10;
+
 var imgWidth = 1000;
 var imgHeight = 500;
 
@@ -15,6 +19,16 @@ var imgdata, threeView;
 
 var geometry = new THREE.Geometry();
 geometry.dynamic = true;
+
+var cropCenter = new Node(new THREE.Vector3());
+
+function updateCrop(){
+    cropCenter.render(new THREE.Vector3(radius*Math.sin(cropPosition.y)*Math.cos(cropPosition.x),
+        radius*Math.sin(cropPosition.y)*Math.sin(cropPosition.x),
+        radius*Math.cos(cropPosition.y))
+    );
+    threeView.render();
+}
 
 function updateGeo(makeFaces){
      for (var i=0;i<imgWidth;i++){
@@ -45,7 +59,7 @@ function updateGeo(makeFaces){
     geometry.verticesNeedUpdate = true;
     geometry.computeFaceNormals();
     geometry.computeBoundingSphere();
-    threeView.render();
+    updateCrop();
 }
 
 $(function() {
@@ -54,7 +68,7 @@ $(function() {
         threeView.onWindowResize();
     }, false);
 
-    initControls();
+    var uiControls = initControls();
 
     var raycaster = new THREE.Raycaster();
     var mouse = new THREE.Vector2();
@@ -77,6 +91,11 @@ $(function() {
     context.drawImage(img, 0, 0, imgWidth, imgHeight);
     imgdata = context.getImageData(0, 0, imgWidth, imgHeight).data;
 
+    var moon = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({color:0xffffff, shading:THREE.FlatShading}));
+    threeView.scene.add(moon);
+
+    threeView.scene.add(cropCenter.object3D);
+
     updateGeo(true);
 
     // var topPole = new THREE.Vector3(0,0,radius);
@@ -90,30 +109,21 @@ $(function() {
     //     geometry.faces.push(new THREE.Face3(index, index-imgHeight, 1));
     // }
 
-    var moon = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({color:0xffffff, shading:THREE.FlatShading}));
-    threeView.scene.add(moon);
-    threeView.render();
-
-    // threeView.scene.add(new THREE.Mesh(new THREE.SphereGeometry(10), new THREE.MeshBasicMaterial()));
-
-
-
-
     $(document).dblclick(function() {
     });
 
     document.addEventListener('mousedown', function(){
+        if (highlightedObj){
+            threeView.enableControls(false);
+        }
         mouseDown = true;
     }, false);
     document.addEventListener('mouseup', function(e){
         isDragging = false;
-        if (draggingNode){
-            draggingNode = null;
-            setHighlightedObj(null);
-        }
+        threeView.enableControls(true);
         mouseDown = false;
     }, false);
-    // document.addEventListener( 'mousemove', mouseMove, false );
+    document.addEventListener( 'mousemove', mouseMove, false );
     function mouseMove(e){
 
         if (mouseDown) {
@@ -127,16 +137,22 @@ $(function() {
 
         var _highlightedObj = null;
         if (!isDragging) {
-            var objsToIntersect = [];
-            objsToIntersect = objsToIntersect.concat(globals.model.getObjectsToIntersect());
-            _highlightedObj = checkForIntersections(e, objsToIntersect);
+            _highlightedObj = checkForIntersections(e, cropCenter.object3D);
             setHighlightedObj(_highlightedObj);
         }  else if (isDragging && highlightedObj){
-            if (!draggingNode) {
-                draggingNode = highlightedObj;
-                threeView.enableControls(false);
+            var intersection = raycaster.intersectObject(moon);
+            if (intersection.length>0){
+                var position = intersection[0].point;
+                cropCenter.render(position.clone());
+                position.normalize();
+                var phi = Math.acos(position.z);
+                var theta = Math.atan2(position.y, position.x);
+                cropPosition.x = theta;
+                cropPosition.y = phi;
+                updateCrop();
+                $("#theta").val(theta.toFixed(2));
+                $("#phi").val(phi.toFixed(2));
             }
-            threeView.render();
         }
     }
     function setHighlightedObj(object){
@@ -149,16 +165,15 @@ $(function() {
         threeView.render();
     }
 
-    function checkForIntersections(e, objects){
+    function checkForIntersections(e, object){
         var _highlightedObj = null;
-        var intersections = raycaster.intersectObjects(objects, true);
+        var intersections = raycaster.intersectObject(object);
         if (intersections.length > 0) {
             var objectFound = false;
             _.each(intersections, function (thing) {
                 if (objectFound) return;
                 if (thing.object && thing.object._myNode){
                     _highlightedObj = thing.object._myNode;
-                    if (!_highlightedObj.fixed) return;
                     _highlightedObj.highlight();
                     objectFound = true;
                 }

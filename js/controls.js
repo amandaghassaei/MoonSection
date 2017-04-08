@@ -27,6 +27,25 @@ function initControls(){
         updateGeo();
     });
 
+    setInput("#theta", cropPosition.x, function(val){
+        cropPosition.x = val;
+        updateCrop();
+    }, 0, Math.PI*2);
+    setInput("#phi", cropPosition.y, function(val){
+        cropPosition.y = val;
+        updateCrop();
+    }, -Math.PI/2, Math.PI/2);
+
+    setSliderInput("#cropSize", cropSize, 1, 200, 0.1, function(val){
+        cropSize = val;
+        updateCrop();
+    });
+
+    setSliderInput("#cropRotation", cropRotation, 0, 2*Math.PI, 0.1, function(val){
+        cropRotation = val;
+        updateCrop();
+    });
+
     function setButtonGroup(id, callback){
         $(id+" a").click(function(e){
             e.preventDefault();
@@ -67,10 +86,10 @@ function initControls(){
             }
             if (min !== undefined && val < min) val = min;
             if (max !== undefined && val > max) val = max;
-            $input.val(val);
+            $input.val(val.toFixed(2));
             callback(val);
         });
-        $input.val(val);
+        $input.val(val.toFixed(2));
     }
 
     function setCheckbox(id, state, callback){
@@ -136,7 +155,7 @@ function initControls(){
         slider.on("slide", function(e, ui){
             var val = ui.value;
             val = Math.exp(Math.log(min) + scale*(val-min));
-            $input.val(val.toFixed(4));
+            $input.val(val.toFixed(2));
             callback(val, id);
         });
     }
@@ -146,7 +165,7 @@ function initControls(){
             value: val
         });
         var $input = $(id+">input");
-        $input.val(val);
+        $input.val(val.toFixed(2));
     }
 
     function setSliderInput(id, val, min, max, incr, callback){
@@ -178,12 +197,15 @@ function initControls(){
             slider.slider('value', val);
             callback(val);
         });
-        $input.val(val);
+        $input.val(val.toFixed(2));
         slider.on("slidestop", function(e, ui){
             var val = ui.value;
             $input.val(val);
             callback(val);
         });
+    }
+    return {
+        updateSliderInput: updateSliderInput
     }
 }
 

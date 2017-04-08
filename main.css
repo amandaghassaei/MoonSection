@@ -45,6 +45,14 @@ body{
     overflow: auto;
 }
 
+#cropControls{
+    margin-top:15px;
+}
+
+.fullWidth{
+    width:100%;
+}
+
 .sliderInput{
     float:right;
     display: inline-block;

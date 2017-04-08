@@ -16,19 +16,22 @@
     <script type="text/javascript" src="dependencies/binary_stl_writer.js"></script>
     <script type="text/javascript" src="dependencies/OrbitControls.js"></script>
     <script type="text/javascript" src="dependencies/FileSaver.min.js"></script>
+    <script type="text/javascript" src="dependencies/underscore-min.js"></script>
 
     <script type="text/javascript" src="js/threeView.js"></script>
-     <script type="text/javascript" src="js/controls.js"></script>
+    <script type="text/javascript" src="js/controls.js"></script>
+    <script type="text/javascript" src="js/node.js"></script>
 
     <script type="text/javascript" src="js/main.js"></script>
 </head>
 <body>
-<img style="display: none; width:1000px; height:500px" id="heightmapSmall" src="moonheightmap1000.png"/>
-<canvas style="display: none; width:1000px; height:500px" id="imgLoader"></canvas>
+<img style="display: none;" id="heightmapSmall" src="moonheightmap1000.png"/>
+<canvas style="display: none;" id="imgLoader"></canvas>
 <div  id="threeContainer"></div>
 <div id="controls">
     <a id="about" href="#" class="btn btn-lg btn-default">About</a><br/>
     <br/>
+    <b>Geometry Controls:</b><br/>
     <div class="sliderInput" id="radius">
         <span class="label-slider">Radius (km) : </span><div class="flat-slider ui-slider ui-corner-all ui-slider-horizontal ui-widget ui-widget-content"></div>
         <input value="" placeholder="" class="form-control" type="text">
@@ -37,8 +40,20 @@
         <span class="label-slider">Feature Range (km) : </span><div class="flat-slider ui-slider ui-corner-all ui-slider-horizontal ui-widget ui-widget-content"></div>
         <input value="" placeholder="" class="form-control" type="text">
     </div>
-    <a id="reset" href="#" class="btn btn-lg btn-default">Reset to Defaults</a><br/>
+    <a id="reset" href="#" class="btn btn-lg btn-default">Reset Geometry to Defaults</a><br/>
     <br/>
+    <div id="cropControls" class="floatRight fullWidth"><b>Crop Controls:</b><br/>
+        <span class="label-slider floatRight">Position (&theta;, &phi; in radians)&nbsp;&nbsp; <input id="theta" value="" placeholder="" class="form-control int" type="text">
+                &nbsp; <input id="phi" value="" placeholder="" class="form-control int" type="text"></span><br/><br/>
+        <div class="sliderInput" id="cropSize">
+            <span class="label-slider">Size (km) : </span><div class="flat-slider ui-slider ui-corner-all ui-slider-horizontal ui-widget ui-widget-content"></div>
+            <input value="" placeholder="" class="form-control" type="text">
+        </div>
+        <div class="sliderInput" id="cropRotation">
+            <span class="label-slider">Rotation (radians) : </span><div class="flat-slider ui-slider ui-corner-all ui-slider-horizontal ui-widget ui-widget-content"></div>
+            <input value="" placeholder="" class="form-control" type="text">
+        </div>
+    </div>
 </div>
 <div class="modal fade" id="aboutModal" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg">
