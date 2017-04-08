@@ -3,10 +3,28 @@
  */
 
 
-function initControls(globals){
+function initControls(){
 
     setLink("#about", function(){
         $('#aboutModal').modal('show');
+    });
+
+    setSliderInput("#radius", radius, 100, 10000, 1, function(val){
+        radius = val;
+        updateGeo();
+    });
+
+    setSliderInput("#scale", scale*255, 0, 400, 1, function(val){
+        scale = val/255;
+        updateGeo();
+    });
+
+    setLink("#reset", function(){
+        radius = defaultRadius;
+        updateSliderInput("#radius", radius);
+        scale = defaultScale;
+        updateSliderInput("#scale", scale*255);
+        updateGeo();
     });
 
     function setButtonGroup(id, callback){
@@ -123,6 +141,14 @@ function initControls(globals){
         });
     }
 
+    function updateSliderInput(id, val){
+        var slider = $(id+">div").slider({
+            value: val
+        });
+        var $input = $(id+">input");
+        $input.val(val);
+    }
+
     function setSliderInput(id, val, min, max, incr, callback){
 
         var slider = $(id+">div").slider({
@@ -153,22 +179,11 @@ function initControls(globals){
             callback(val);
         });
         $input.val(val);
-        slider.on("slide", function(e, ui){
+        slider.on("slidestop", function(e, ui){
             var val = ui.value;
             $input.val(val);
             callback(val);
         });
-    }
-
-    function update(){
-        function setInput(id, val){
-            $(id).val(val);
-        }
-    }
-
-    return {
-        update:update,
-        setDeltaT: setDeltaT
     }
 }
 

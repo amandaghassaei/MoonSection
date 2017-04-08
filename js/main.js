@@ -2,13 +2,59 @@
  * Created by ghassaei on 2/22/17.
  */
 
-globals = {};
+
+var defaultRadius = 1737;
+var defaultScale = 19.91/255;
+var radius = defaultRadius;
+var scale = defaultScale;
+
+var imgWidth = 1000;
+var imgHeight = 500;
+
+var imgdata, threeView;
+
+var geometry = new THREE.Geometry();
+geometry.dynamic = true;
+
+function updateGeo(makeFaces){
+     for (var i=0;i<imgWidth;i++){
+        var theta = 2*Math.PI*i/imgWidth;
+        var sinTheta = Math.sin(theta);
+        var cosTheta = Math.cos(theta);
+        for (var j=0;j<imgHeight;j++){
+            var index = i*imgHeight + j;
+            var pxVal = imgdata[4*(j*imgWidth + i)];
+            var rad = radius + scale*(pxVal-pxVal/2);
+            var phi = Math.PI*j/(imgHeight-1);
+            var RsinPhi = rad*Math.sin(phi);
+            var RcosPhi = rad*Math.cos(phi);
+            if (makeFaces) geometry.vertices.push(new THREE.Vector3(RsinPhi*cosTheta, RsinPhi*sinTheta, RcosPhi));
+            else geometry.vertices[index].set(RsinPhi*cosTheta, RsinPhi*sinTheta, RcosPhi);
+
+            if (makeFaces) {
+                if (j > 0 && i > 0) {
+                    geometry.faces.push(new THREE.Face3(index, index - 1, index - imgHeight));
+                    geometry.faces.push(new THREE.Face3(index - imgHeight, index - 1, index - imgHeight - 1));
+                } else if (j>0){
+                    geometry.faces.push(new THREE.Face3(index, index - 1, index + (imgWidth-1)*imgHeight));
+                    geometry.faces.push(new THREE.Face3(index + (imgWidth-1)*imgHeight, index - 1, index + (imgWidth-1)*imgHeight - 1));
+                }
+            }
+        }
+    }
+    geometry.verticesNeedUpdate = true;
+    geometry.computeFaceNormals();
+    geometry.computeBoundingSphere();
+    threeView.render();
+}
 
 $(function() {
 
     window.addEventListener('resize', function(){
         threeView.onWindowResize();
     }, false);
+
+    initControls();
 
     var raycaster = new THREE.Raycaster();
     var mouse = new THREE.Vector2();
@@ -17,14 +63,8 @@ $(function() {
     var mouseDown = false;
     var highlightedObj;
 
+    threeView = initThreeView();
 
-    var radius = 100;
-    var scale = 3;
-
-    var threeView = initThreeView();
-
-    var imgWidth = 1000;
-    var imgHeight = 500;
     var $imgLoader = $("#imgLoader");
     $imgLoader.innerWidth = imgWidth;
     $imgLoader.innerHeight = imgHeight;
@@ -35,10 +75,9 @@ $(function() {
     var context = document.getElementById('imgLoader').getContext('2d');
     context.canvas.width = imgWidth; context.canvas.height = imgHeight;
     context.drawImage(img, 0, 0, imgWidth, imgHeight);
-    var imgdata = context.getImageData(0, 0, imgWidth, imgHeight).data;
+    imgdata = context.getImageData(0, 0, imgWidth, imgHeight).data;
 
-    var geometry = new THREE.Geometry();
-    geometry.dynamic = true;
+    updateGeo(true);
 
     // var topPole = new THREE.Vector3(0,0,radius);
     // var bottomPole = new THREE.Vector3(0,0,-radius);
@@ -51,27 +90,7 @@ $(function() {
     //     geometry.faces.push(new THREE.Face3(index, index-imgHeight, 1));
     // }
 
-    for (var i=0;i<imgWidth;i++){
-        var theta = 2*Math.PI*i/(imgWidth-1);
-        var sinTheta = Math.sin(theta);
-        var cosTheta = Math.cos(theta);
-        for (var j=0;j<imgHeight;j++){
-            var index = i*imgHeight + j;
-            var rad = radius + scale*imgdata[4*(j*imgWidth + i)]/255;
-            var phi = Math.PI*j/(imgHeight-1);
-            var RsinPhi = rad*Math.sin(phi);
-            var RcosPhi = rad*Math.cos(phi);
-            geometry.vertices.push(new THREE.Vector3(RsinPhi*cosTheta, RsinPhi*sinTheta, RcosPhi));
-
-            if (j>0 && i>0){
-                geometry.faces.push(new THREE.Face3(index, index-1, index-imgHeight));
-                geometry.faces.push(new THREE.Face3(index-imgHeight, index-1, index-imgHeight-1));
-            }
-        }
-    }
-    geometry.computeFaceNormals();
-    geometry.computeBoundingSphere();
-    var moon = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({color:0xff00ff, shading:THREE.FlatShading}));
+    var moon = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({color:0xffffff, shading:THREE.FlatShading}));
     threeView.scene.add(moon);
     threeView.render();
 
