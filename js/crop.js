@@ -5,10 +5,11 @@
 var isCropping = false;
 
 var regionResolution = 10;
-var fineResolution = 3;
+var fineResolution = 30;
 var resolution = regionResolution*fineResolution + 1;
 var allAngles = [];
 var regionGeo = new THREE.Geometry();
+//surface vertices
 for (var i=0;i<resolution;i++){
     allAngles.push([]);
     for (var j=0;j<resolution;j++) {
@@ -21,6 +22,8 @@ for (var i=0;i<resolution;i++){
         }
     }
 }
+//edge vertices
+
 regionGeo.dynamic = true;
 var region = new THREE.Mesh(regionGeo, new THREE.MeshLambertMaterial({color:0xffffff, shading:THREE.FlatShading}));
 region.visible = false;
@@ -134,23 +137,37 @@ function makeGeo(){
                 for (var b = 0; b < fineResolution; b++) {
                     var v = b / fineResolution;
 
+                    var indexI = i-fineResolution+a;
+                    var indexJ = j-fineResolution+b;
                     var vertex = interpolate(left, right, v);
-                    regionGeo.vertices[(i-fineResolution+a)*resolution+j-fineResolution+b].set(vertex.x, vertex.y, vertex.z);
+                    var angles = getAngularCoordinates(vertex);
+                    allAngles[indexI][indexJ] = angles;
+                    vertex = makeVertexWithVal(getInterpolatedPxValue(angles), angles);
+
+                    regionGeo.vertices[indexI*resolution+indexJ].set(vertex.x, vertex.y, vertex.z);
                 }
             }
 
             if (i==resolution-1) {
                 for (var b = 0; b < fineResolution; b++) {
                     var v = b / fineResolution;
+                    var indexJ = j-fineResolution+b;
                     var vertex = interpolate(sw, se, v);
-                    regionGeo.vertices[i * resolution + j - fineResolution + b].set(vertex.x, vertex.y, vertex.z);
+                    var angles = getAngularCoordinates(vertex);
+                    allAngles[i][indexJ] = angles;
+                    vertex = makeVertexWithVal(getInterpolatedPxValue(angles), angles);
+                    regionGeo.vertices[i * resolution + indexJ].set(vertex.x, vertex.y, vertex.z);
                 }
             }
             if (j==resolution-1){
                 for (var a = 0; a < fineResolution; a++) {
                     var v = a / fineResolution;
+                    var indexI = i-fineResolution+a;
                     var vertex = interpolate(ne, se, v);
-                    regionGeo.vertices[(i-fineResolution+a)* resolution + j].set(vertex.x, vertex.y, vertex.z);
+                    var angles = getAngularCoordinates(vertex);
+                    allAngles[indexI][j] = angles;
+                    vertex = makeVertexWithVal(getInterpolatedPxValue(angles), angles);
+                    regionGeo.vertices[indexI*resolution + j].set(vertex.x, vertex.y, vertex.z);
                 }
             }
 
@@ -165,11 +182,28 @@ function makeGeo(){
     region.visible = true;
 
     // wireframe
-    var geo = new THREE.WireframeGeometry( regionGeo); // or WireframeGeometry
-    var mat = new THREE.LineBasicMaterial( {color: 0xff0000} );
-    var wireframe = new THREE.LineSegments( geo, mat );
-    region.add( wireframe );
+    // var geo = new THREE.WireframeGeometry( regionGeo); // or WireframeGeometry
+    // var mat = new THREE.LineBasicMaterial( {color: 0xff0000} );
+    // var wireframe = new THREE.LineSegments( geo, mat );
+    // region.add( wireframe );
 
+    threeView.render();
+}
+
+function updateRegionSurface(){
+
+    for (i=0;i<resolution;i++){
+        for (j=0;j<resolution;j++){
+            var angles = allAngles[i][j].clone();
+            var vertex = makeVertexWithVal(getInterpolatedPxValue(angles), angles);
+            regionGeo.vertices[i*resolution + j].set(vertex.x, vertex.y, vertex.z);
+        }
+    }
+
+    regionGeo.center();
+    regionGeo.computeFaceNormals();
+    regionGeo.computeBoundingSphere();
+    regionGeo.verticesNeedUpdate = true;
     threeView.render();
 }
 

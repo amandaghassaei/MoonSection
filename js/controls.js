@@ -14,9 +14,14 @@ function initControls(){
         updateGeo();
     });
 
+
+    setSliderInput("#scale", scale*255, 0, 400, 1, function(val){
+        scale = val/255;
+        if (isCropping) updateRegionSurface();
+    });
     setSliderInputStop("#scale", scale*255, 0, 400, 1, function(val){
         scale = val/255;
-        updateGeo();
+        if (!isCropping) updateGeo();
     });
 
     setLink("#reset", function(){
