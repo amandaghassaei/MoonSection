@@ -23,7 +23,7 @@ function initThreeView() {
         renderer.setSize(window.innerWidth, window.innerHeight);
         container.append(renderer.domElement);
 
-        scene.background = new THREE.Color(0x000000);
+        scene.background = new THREE.Color(0x000011);
         var directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.7);
         directionalLight1.position.set(-10000, 10000, 10000);
         camera.add(directionalLight1);

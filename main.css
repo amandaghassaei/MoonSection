@@ -99,6 +99,10 @@ input.form-control {
     float:right;
 }
 
+.modal-body{
+    color:#34495e;
+}
+
 .modal-body li{
     margin-bottom:10px;
 }
