@@ -40,6 +40,8 @@ var normalMaterial = new THREE.MeshNormalMaterial();
 
 var ssao = false;
 
+var projRaycaster = new THREE.Raycaster();
+
 function changeMaterial(){
     if (useNormalMaterial){
         moon.material = normalMaterial;
@@ -50,7 +52,7 @@ function changeMaterial(){
 }
 
 
-function updateCrop(){
+function updateCrop(projection){
     var rad = radius + scale*127;
     cropCenter.object3D.scale.set(radius/50, radius/50, radius/50);
     var centerPosition = new THREE.Vector3(rad*Math.sin(cropPosition.y)*Math.cos(cropPosition.x),
@@ -74,6 +76,8 @@ function updateCrop(){
     basis2.applyQuaternion(quaternion);
     basis2.applyQuaternion(quaternion2);
 
+    var dir = centerPosition.clone().multiplyScalar(-1);
+
     centerPosition.multiplyScalar(rad);
 
     basis1.multiplyScalar(cropSize);
@@ -84,36 +88,57 @@ function updateCrop(){
     var bottomRight = centerPosition.clone().add(basis1).add(basis2);
     var bottomLeft = centerPosition.clone().add(basis1).sub(basis2);
 
-    for (var i=0;i<10;i++){
-        var t = i/10;
-        var vertex = projectToSurface(topRight.clone().multiplyScalar(t).add(topLeft.clone().multiplyScalar(1-t)));
-        squareGeo.vertices[i].set(vertex.x, vertex.y, vertex.z);
-        vertex = projectToSurface(bottomRight.clone().multiplyScalar(t).add(topRight.clone().multiplyScalar(1-t)));
-        squareGeo.vertices[10+i].set(vertex.x, vertex.y, vertex.z);
-        vertex = projectToSurface(bottomLeft.clone().multiplyScalar(t).add(bottomRight.clone().multiplyScalar(1-t)));
-        squareGeo.vertices[20+i].set(vertex.x, vertex.y, vertex.z);
-        vertex = projectToSurface(topLeft.clone().multiplyScalar(t).add(bottomLeft.clone().multiplyScalar(1-t)));
-        squareGeo.vertices[30+i].set(vertex.x, vertex.y, vertex.z);
+
+    if (projection) {
+        for (var i = 0; i < 10; i++) {
+            var t = i / 10;
+            var vertex = raycastToSurface(topRight.clone().multiplyScalar(t).add(topLeft.clone().multiplyScalar(1 - t)), dir);
+            squareGeo.vertices[i].set(vertex.x, vertex.y, vertex.z);
+            vertex = raycastToSurface(bottomRight.clone().multiplyScalar(t).add(topRight.clone().multiplyScalar(1 - t)), dir);
+            squareGeo.vertices[10 + i].set(vertex.x, vertex.y, vertex.z);
+            vertex = raycastToSurface(bottomLeft.clone().multiplyScalar(t).add(bottomRight.clone().multiplyScalar(1 - t)), dir);
+            squareGeo.vertices[20 + i].set(vertex.x, vertex.y, vertex.z);
+            vertex = raycastToSurface(topLeft.clone().multiplyScalar(t).add(bottomLeft.clone().multiplyScalar(1 - t)), dir);
+            squareGeo.vertices[30 + i].set(vertex.x, vertex.y, vertex.z);
+        }
+    } else {
+        for (var i = 0; i < 10; i++) {
+            var t = i / 10;
+            var vertex = topRight.clone().multiplyScalar(t).add(topLeft.clone().multiplyScalar(1 - t));
+            squareGeo.vertices[i].set(vertex.x, vertex.y, vertex.z);
+            vertex = bottomRight.clone().multiplyScalar(t).add(topRight.clone().multiplyScalar(1 - t));
+            squareGeo.vertices[10 + i].set(vertex.x, vertex.y, vertex.z);
+            vertex = bottomLeft.clone().multiplyScalar(t).add(bottomRight.clone().multiplyScalar(1 - t));
+            squareGeo.vertices[20 + i].set(vertex.x, vertex.y, vertex.z);
+            vertex = topLeft.clone().multiplyScalar(t).add(bottomLeft.clone().multiplyScalar(1 - t));
+            squareGeo.vertices[30 + i].set(vertex.x, vertex.y, vertex.z);
+        }
     }
     squareGeo.vertices[40].set(squareGeo.vertices[0].x, squareGeo.vertices[0].y, squareGeo.vertices[0].z);
 
     squareGeo.computeBoundingSphere();
     squareGeo.verticesNeedUpdate = true;
 
-    // for (var i=0;i<10;i++){
-    //     for (var j=0;j<4;j++){
-    //         var theta = j%2*cropAngle;
-    //         cropSquare.vertices[4*i + j].set(j%2*cropSize, (j+1)%2*cropSize, );
-    //     }
-    // }
+    cropLine.visible = true;
+
     threeView.render();
+}
+
+function raycastToSurface(vertex, dir){
+    projRaycaster.set(vertex, dir);
+    var intersection = projRaycaster.intersectObject(moon, false);
+    if (intersection.length == 0) {
+        console.warn("no intersection");
+        return new THREE.Vector3();
+    }
+    return intersection[0].point.sub(dir.clone().multiplyScalar(scale*255));
 }
 
 function projectToSurface(vertex){
     vertex.normalize();
     var phi = Math.acos(vertex.z);
     var theta = Math.atan2(vertex.y, vertex.x);
-    var rad = radius + scale*127;
+    var rad = radius + scale*255;
     var RsinPhi = rad*Math.sin(phi);
     var RcosPhi = rad*Math.cos(phi);
     vertex.set(RsinPhi*Math.cos(theta), RsinPhi* Math.sin(theta), RcosPhi);
@@ -150,7 +175,7 @@ function updateGeo(makeFaces){
     geometry.verticesNeedUpdate = true;
     geometry.computeFaceNormals();
     geometry.computeBoundingSphere();
-    updateCrop();
+    updateCrop(true);
 }
 
 $(function() {
@@ -213,9 +238,13 @@ $(function() {
         mouseDown = true;
     }, false);
     document.addEventListener('mouseup', function(e){
+        if (highlightedObj) {
+            cropLine.visible = false;
+            updateCrop(true);
+        }
         isDragging = false;
         threeView.enableControls(true);
-        axis.visible = false
+        axis.visible = false;
         mouseDown = false;
         threeView.render();
     }, false);
@@ -265,9 +294,10 @@ $(function() {
                 var theta = Math.atan2(position.y, position.x);
                 cropPosition.x = theta;
                 cropPosition.y = phi;
-                updateCrop();
                 $("#theta").val(theta.toFixed(2));
                 $("#phi").val(phi.toFixed(2));
+                updateCrop(false);
+                threeView.render();
             }
         }
         if(shouldRender) threeView.render();

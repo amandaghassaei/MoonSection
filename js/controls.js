@@ -38,12 +38,22 @@ function initControls(){
 
     setSliderInput("#cropSize", cropSize, 100, 2000, 0.1, function(val){
         cropSize = val;
-        updateCrop();
+        updateCrop(false);
     });
 
-    setSliderInput("#cropRotation", cropRotation, 0, 2*Math.PI, 0.01, function(val){
+    setSliderInputStop("#cropSize", cropSize, 100, 2000, 0.1, function(val){
+        cropSize = val;
+        updateCrop(true);
+    });
+
+    setSliderInput("#cropRotation", cropRotation, 0, Math.PI/2, 0.01, function(val){
         cropRotation = val;
-        updateCrop();
+        updateCrop(false);
+    });
+
+    setSliderInputStop("#cropRotation", cropRotation, 0, Math.PI/2, 0.01, function(val){
+        cropRotation = val;
+        updateCrop(true);
     });
 
     setRadio("materialType", "white", function(val){
