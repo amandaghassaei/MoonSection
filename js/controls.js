@@ -51,6 +51,13 @@ function initControls(){
         changeMaterial();
     });
 
+    setCheckbox("#ssao", ssao, function(state){
+        ssao = state;
+        if (state) directionalLight1.intensity = 0.9;
+        else directionalLight1.intensity = 0.7;
+        threeView.render();
+    });
+
     function setButtonGroup(id, callback){
         $(id+" a").click(function(e){
             e.preventDefault();

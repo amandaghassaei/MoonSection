@@ -17,6 +17,13 @@
     <script type="text/javascript" src="dependencies/OrthographicTrackballControls.js"></script>
     <script type="text/javascript" src="dependencies/FileSaver.min.js"></script>
     <script type="text/javascript" src="dependencies/underscore-min.js"></script>
+    <script type="text/javascript" src="dependencies/EffectComposer.js"></script>
+    <script type="text/javascript" src="dependencies/MaskPass.js"></script>
+    <script type="text/javascript" src="dependencies/ShaderPass.js"></script>
+    <script type="text/javascript" src="dependencies/CopyShader.js"></script>
+    <script type="text/javascript" src="dependencies/SSAOShader.js"></script>
+    <script type="text/javascript" src="dependencies/Detector.js"></script>
+    <script type="text/javascript" src="dependencies/RenderPass.js"></script>
 
     <script type="text/javascript" src="js/threeView.js"></script>
     <script type="text/javascript" src="js/controls.js"></script>
@@ -69,7 +76,11 @@
                     <input name="materialType" value="normal" data-toggle="radio" class="custom-radio" type="radio"><span class="icons"><span class="icon-unchecked"></span><span class="icon-checked"></span></span>
                     Normal Material
                 </label>
-            </div>
+            </div><br/>
+            <label class="checkbox" for="ssao">
+                <input id="ssao" data-toggle="checkbox" class="custom-checkbox layersSelector" type="checkbox"><span class="icons"><span class="icon-unchecked"></span><span class="icon-checked"></span></span>
+                Ambient Occlusion
+            </label>
         </div>
     </div>
 </div>

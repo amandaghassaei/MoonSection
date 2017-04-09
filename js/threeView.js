@@ -2,14 +2,21 @@
  * Created by ghassaei on 9/16/16.
  */
 
+var directionalLight1;
+
 function initThreeView() {
 
     var scene = new THREE.Scene();
+    var sceneDepth = new THREE.Scene();
+
     var camera = new THREE.OrthographicCamera(window.innerWidth / -2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / -2, -10000, 10000);//-40, 40);
     // var VIEW_ANGLE = 45, ASPECT = window.innerWidth / window.innerHeight, NEAR = -10000, FAR = 10000;
     // var camera = new THREE.PerspectiveCamera( VIEW_ANGLE, ASPECT, NEAR, FAR);
     var renderer = new THREE.WebGLRenderer({antialias: true});
     var controls;
+
+    var depthMaterial, effectComposer, depthRenderTarget;
+    var ssaoPass;
 
     var animationRunning = false;
     var pauseFlag = false;
@@ -24,12 +31,15 @@ function initThreeView() {
         container.append(renderer.domElement);
 
         scene.background = new THREE.Color(0x000011);
-        var directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.7);
+        directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.7);
         directionalLight1.position.set(-10000, 10000, 10000);
         camera.add(directionalLight1);
-        scene.add(new THREE.AmbientLight(0x000044, 0.2));
+        var ambientLight = new THREE.AmbientLight(0x000044, 0.2);
+        scene.add(ambientLight);
+        // sceneDepth.add(ambientLight);
 
         scene.add(camera);
+        // sceneDepth.add(camera);
 
         camera.zoom = 0.14;
         camera.position.x = 4000;
@@ -51,6 +61,32 @@ function initThreeView() {
         controls.staticMoving = true;
         controls.dynamicDampingFactor = 0.3;
         controls.addEventListener('change', render);
+
+        var renderPass = new THREE.RenderPass( scene, camera );
+
+        // Setup depth pass
+        depthMaterial = new THREE.MeshDepthMaterial();
+        depthMaterial.depthPacking = THREE.RGBADepthPacking;
+        depthMaterial.blending = THREE.NoBlending;
+
+        var pars = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter };
+        depthRenderTarget = new THREE.WebGLRenderTarget( window.innerWidth, window.innerHeight, pars );
+
+        // Setup SSAO pass
+        ssaoPass = new THREE.ShaderPass( THREE.SSAOShader );
+        ssaoPass.renderToScreen = true;
+        //ssaoPass.uniforms[ "tDiffuse" ].value will be set by ShaderPass
+        ssaoPass.uniforms[ "tDepth" ].value = depthRenderTarget.texture;
+        ssaoPass.uniforms[ 'size' ].value.set( window.innerWidth, window.innerHeight );
+        ssaoPass.uniforms[ 'cameraNear' ].value = camera.near;
+        ssaoPass.uniforms[ 'cameraFar' ].value = camera.far;
+        ssaoPass.uniforms[ 'onlyAO' ].value = ssao? 1:0;
+        ssaoPass.uniforms[ 'aoClamp' ].value = 0.3;
+        ssaoPass.uniforms[ 'lumInfluence' ].value = 0.5;
+        // Add pass to effect composer
+        effectComposer = new THREE.EffectComposer( renderer );
+        effectComposer.addPass( renderPass );
+        effectComposer.addPass( ssaoPass );
 
         render();
     }
@@ -80,8 +116,20 @@ function initThreeView() {
     }
 
     function _render(){
-        // console.log("render");
-        renderer.render(scene, camera);
+
+        if (ssao) {
+            // Render depth into depthRenderTarget
+            // sceneDepth.overrideMaterial = depthMaterial;
+            scene.overrideMaterial = depthMaterial;
+            renderer.render(scene, camera, depthRenderTarget, true);
+            // Render renderPass and SSAO shaderPass
+            // sceneDepth.overrideMaterial = null;
+            scene.overrideMaterial = null;
+            effectComposer.render();
+        } else {
+            renderer.render(scene, camera);
+        }
+
     }
 
     function _loop(callback){
@@ -108,6 +156,16 @@ function initThreeView() {
 
         renderer.setSize(window.innerWidth, window.innerHeight);
 
+        var width = window.innerWidth;
+        var height = window.innerHeight;
+
+        ssaoPass.uniforms[ 'size' ].value.set( width, height );
+        var pixelRatio = renderer.getPixelRatio();
+        var newWidth  = Math.floor( width / pixelRatio ) || 1;
+        var newHeight = Math.floor( height / pixelRatio ) || 1;
+        depthRenderTarget.setSize( newWidth, newHeight );
+        effectComposer.setSize( newWidth, newHeight );
+
         render();
     }
 
@@ -122,6 +180,7 @@ function initThreeView() {
         pauseAnimation: pauseAnimation,
         enableControls: enableControls,
         scene: scene,
+        sceneDepth: sceneDepth,
         camera: camera
     }
 }

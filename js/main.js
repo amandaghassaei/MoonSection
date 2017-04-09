@@ -37,6 +37,8 @@ var useNormalMaterial = false;
 var moonMaterial = new THREE.MeshLambertMaterial({color:0xffffff, shading:THREE.FlatShading});
 var normalMaterial = new THREE.MeshNormalMaterial();
 
+var ssao = false;
+
 function changeMaterial(){
     if (useNormalMaterial){
         moon.material = normalMaterial;
@@ -157,6 +159,7 @@ $(function() {
 
     moon = new THREE.Mesh(geometry, moonMaterial);
     threeView.scene.add(moon);
+    threeView.sceneDepth.add(moon.clone());
 
     threeView.scene.add(cropCenter.object3D);
     threeView.scene.add(cropLine);
