@@ -86,13 +86,13 @@ function updateCrop(){
 
     for (var i=0;i<10;i++){
         var t = i/10;
-        var vertex = topRight.clone().multiplyScalar(t).add(topLeft.clone().multiplyScalar(1-t));
+        var vertex = projectToSurface(topRight.clone().multiplyScalar(t).add(topLeft.clone().multiplyScalar(1-t)));
         squareGeo.vertices[i].set(vertex.x, vertex.y, vertex.z);
-        vertex = bottomRight.clone().multiplyScalar(t).add(topRight.clone().multiplyScalar(1-t));
+        vertex = projectToSurface(bottomRight.clone().multiplyScalar(t).add(topRight.clone().multiplyScalar(1-t)));
         squareGeo.vertices[10+i].set(vertex.x, vertex.y, vertex.z);
-        vertex = bottomLeft.clone().multiplyScalar(t).add(bottomRight.clone().multiplyScalar(1-t));
+        vertex = projectToSurface(bottomLeft.clone().multiplyScalar(t).add(bottomRight.clone().multiplyScalar(1-t)));
         squareGeo.vertices[20+i].set(vertex.x, vertex.y, vertex.z);
-        vertex = topLeft.clone().multiplyScalar(t).add(bottomLeft.clone().multiplyScalar(1-t));
+        vertex = projectToSurface(topLeft.clone().multiplyScalar(t).add(bottomLeft.clone().multiplyScalar(1-t)));
         squareGeo.vertices[30+i].set(vertex.x, vertex.y, vertex.z);
     }
     squareGeo.vertices[40].set(squareGeo.vertices[0].x, squareGeo.vertices[0].y, squareGeo.vertices[0].z);
@@ -107,6 +107,17 @@ function updateCrop(){
     //     }
     // }
     threeView.render();
+}
+
+function projectToSurface(vertex){
+    vertex.normalize();
+    var phi = Math.acos(vertex.z);
+    var theta = Math.atan2(vertex.y, vertex.x);
+    var rad = radius + scale*127;
+    var RsinPhi = rad*Math.sin(phi);
+    var RcosPhi = rad*Math.cos(phi);
+    vertex.set(RsinPhi*Math.cos(theta), RsinPhi* Math.sin(theta), RcosPhi);
+    return vertex;
 }
 
 function updateGeo(makeFaces){
