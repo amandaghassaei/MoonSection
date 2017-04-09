@@ -15,11 +15,11 @@ function initControls(){
     });
 
 
-    setSliderInput("#scale", scale*255, 0, 400, 1, function(val){
+    setSliderInput("#scale", scale*255, 0, 1000, 1, function(val){
         scale = val/255;
         if (isCropping) updateRegionSurface();
     });
-    setSliderInputStop("#scale", scale*255, 0, 400, 1, function(val){
+    setSliderInputStop("#scale", scale*255, 0, 1000, 1, function(val){
         scale = val/255;
         if (!isCropping) updateGeo();
     });
@@ -85,6 +85,11 @@ function initControls(){
             ambientLight.intensity = 0.25;
         }
         threeView.render();
+    });
+
+    setSliderInput("#baseThickness", baseThickness, 0, 10, 0.1, function(val){
+        baseThickness = val;
+        updateRegionBase();
     });
 
     function setButtonGroup(id, callback){

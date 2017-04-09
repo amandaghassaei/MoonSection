@@ -4,6 +4,8 @@
 
 var isCropping = false;
 
+var baseThickness = 1;
+
 var regionResolution = 10;
 var fineResolution = 30;
 var resolution = regionResolution*fineResolution + 1;
@@ -23,6 +25,55 @@ for (var i=0;i<resolution;i++){
     }
 }
 //edge vertices
+for (var i=0;i<resolution;i++){
+    var index = regionGeo.vertices.length;
+    regionGeo.vertices.push(new THREE.Vector3());
+    if (i>0) {
+        regionGeo.faces.push(new THREE.Face3(index, index-1, i));
+        regionGeo.faces.push(new THREE.Face3(index - 1, i-1, i));
+    }
+}
+for (var i=0;i<resolution;i++){
+    var index = regionGeo.vertices.length;
+    regionGeo.vertices.push(new THREE.Vector3());
+    if (i>0) {
+        var _i = resolution*(resolution-1)+i;
+        regionGeo.faces.push(new THREE.Face3(index-1, index, _i));
+        regionGeo.faces.push(new THREE.Face3(index - 1, _i, _i-1));
+    }
+}
+for (var i=0;i<resolution;i++){
+    var index = regionGeo.vertices.length;
+    regionGeo.vertices.push(new THREE.Vector3());
+    if (i>0) {
+        var _i = i*resolution;
+        regionGeo.faces.push(new THREE.Face3(index-1, index, _i));
+        regionGeo.faces.push(new THREE.Face3(index - 1, _i, _i-resolution));
+    }
+}
+for (var i=0;i<resolution;i++){
+    var index = regionGeo.vertices.length;
+    regionGeo.vertices.push(new THREE.Vector3());
+    if (i>0) {
+        var _i = (i+1)*resolution-1;
+        regionGeo.faces.push(new THREE.Face3(index, index-1, _i));
+        regionGeo.faces.push(new THREE.Face3(index - 1, _i-resolution, _i));
+    }
+}
+regionGeo.vertices.push(new THREE.Vector3());
+for (var i=1;i<resolution;i++){
+    regionGeo.faces.push(new THREE.Face3(resolution*resolution+i-1, resolution*resolution+i, regionGeo.vertices.length-1));
+}
+for (var i=1;i<resolution;i++){
+    regionGeo.faces.push(new THREE.Face3(resolution*(resolution+1)+i, resolution*(resolution+1)+i-1, regionGeo.vertices.length-1));
+}
+for (var i=1;i<resolution;i++){
+    regionGeo.faces.push(new THREE.Face3(resolution*(resolution+2)+i, resolution*(resolution+2)+i-1, regionGeo.vertices.length-1));
+}
+for (var i=1;i<resolution;i++){
+    regionGeo.faces.push(new THREE.Face3(resolution*(resolution+3)+i-1, resolution*(resolution+3)+i, regionGeo.vertices.length-1));
+}
+
 
 regionGeo.dynamic = true;
 var region = new THREE.Mesh(regionGeo, new THREE.MeshLambertMaterial({color:0xffffff, shading:THREE.FlatShading}));
@@ -181,6 +232,8 @@ function makeGeo(){
 
     region.visible = true;
 
+    updateRegionBase();
+
     // wireframe
     // var geo = new THREE.WireframeGeometry( regionGeo); // or WireframeGeometry
     // var mat = new THREE.LineBasicMaterial( {color: 0xff0000} );
@@ -199,6 +252,54 @@ function updateRegionSurface(){
             regionGeo.vertices[i*resolution + j].set(vertex.x, vertex.y, vertex.z);
         }
     }
+
+    updateRegionBase();
+}
+
+function updateRegionBase(){
+    var centerPosition = new THREE.Vector3(Math.sin(cropPosition.y)*Math.cos(cropPosition.x),
+        Math.sin(cropPosition.y)*Math.sin(cropPosition.x),
+        Math.cos(cropPosition.y));
+    var dir = centerPosition.clone().normalize().multiplyScalar(-baseThickness*100);
+
+    //curved base
+    // for (var i=0;i<resolution;i++){
+    //     var vertex = dir.clone().multiplyScalar(-baseThickness*100).add(regionGeo.vertices[i]);
+    //     regionGeo.vertices[resolution*resolution+i].set(vertex.x, vertex.y, vertex.z);
+    // }
+
+    var min = dir.clone().add(regionGeo.vertices[0]);
+    var max = dir.clone().add(regionGeo.vertices[resolution-1]);
+    for (var i=0;i<resolution;i++){
+        var t = i/(resolution-1);
+        var vertex = interpolate(min, max, t);
+        regionGeo.vertices[resolution*resolution+i].set(vertex.x, vertex.y, vertex.z);
+    }
+    min = dir.clone().add(regionGeo.vertices[resolution*(resolution-1)]);
+    max = dir.clone().add(regionGeo.vertices[resolution*resolution-1]);
+    for (var i=0;i<resolution;i++){
+        var t = i/(resolution-1);
+        var vertex = interpolate(min, max, t);
+        regionGeo.vertices[resolution*(resolution+1)+i].set(vertex.x, vertex.y, vertex.z);
+    }
+    min = dir.clone().add(regionGeo.vertices[0]);
+    max = dir.clone().add(regionGeo.vertices[resolution*(resolution-1)]);
+    for (var i=0;i<resolution;i++){
+        var t = i/(resolution-1);
+        var vertex = interpolate(min, max, t);
+        regionGeo.vertices[resolution*(resolution+2)+i].set(vertex.x, vertex.y, vertex.z);
+    }
+    min = dir.clone().add(regionGeo.vertices[resolution-1]);
+    max = dir.clone().add(regionGeo.vertices[resolution*resolution-1]);
+    for (var i=0;i<resolution;i++){
+        var t = i/(resolution-1);
+        var vertex = interpolate(min, max, t);
+        regionGeo.vertices[resolution*(resolution+3)+i].set(vertex.x, vertex.y, vertex.z);
+    }
+
+    var vertex = interpolate(dir.clone().add(regionGeo.vertices[0]), max, 0.5);
+    regionGeo.vertices[regionGeo.vertices.length-1].set(vertex.x, vertex.y, vertex.z);
+
 
     regionGeo.center();
     regionGeo.computeFaceNormals();
