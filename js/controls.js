@@ -53,8 +53,14 @@ function initControls(){
 
     setCheckbox("#ssao", ssao, function(state){
         ssao = state;
-        if (state) directionalLight1.intensity = 0.9;
-        else directionalLight1.intensity = 0.7;
+        if (state) {
+            directionalLight1.intensity = 0.9;
+            ambientLight.intensity = 0.3;
+        }
+        else {
+            directionalLight1.intensity = 0.7;
+            ambientLight.intensity = 0.2;
+        }
         threeView.render();
     });
 

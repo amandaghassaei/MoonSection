@@ -2,7 +2,7 @@
  * Created by ghassaei on 9/16/16.
  */
 
-var directionalLight1;
+var directionalLight1, ambientLight;
 
 function initThreeView() {
 
@@ -31,15 +31,14 @@ function initThreeView() {
         container.append(renderer.domElement);
 
         scene.background = new THREE.Color(0x000011);
+        sceneDepth.background = new THREE.Color(0x000011);
         directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.7);
         directionalLight1.position.set(-10000, 10000, 10000);
         camera.add(directionalLight1);
-        var ambientLight = new THREE.AmbientLight(0x000044, 0.2);
+        ambientLight = new THREE.AmbientLight(0x000044, 0.2);
         scene.add(ambientLight);
-        // sceneDepth.add(ambientLight);
 
         scene.add(camera);
-        // sceneDepth.add(camera);
 
         camera.zoom = 0.14;
         camera.position.x = 4000;
@@ -119,12 +118,10 @@ function initThreeView() {
 
         if (ssao) {
             // Render depth into depthRenderTarget
-            // sceneDepth.overrideMaterial = depthMaterial;
-            scene.overrideMaterial = depthMaterial;
-            renderer.render(scene, camera, depthRenderTarget, true);
+            sceneDepth.overrideMaterial = depthMaterial;
+            renderer.render(sceneDepth, camera, depthRenderTarget, true);
             // Render renderPass and SSAO shaderPass
             // sceneDepth.overrideMaterial = null;
-            scene.overrideMaterial = null;
             effectComposer.render();
         } else {
             renderer.render(scene, camera);
