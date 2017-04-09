@@ -61,6 +61,10 @@ function initControls(){
         changeMaterial();
     });
 
+    setLink("#crop", function(){
+
+    });
+
     setCheckbox("#ssao", ssao, function(state){
         ssao = state;
         if (state) {

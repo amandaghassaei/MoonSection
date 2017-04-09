@@ -2,6 +2,7 @@
  * Created by ghassaei on 2/22/17.
  */
 
+var loaded = false;
 
 var defaultRadius = 1737;
 var defaultScale = 19.91/255;
@@ -180,11 +181,7 @@ function updateGeo(makeFaces){
 
 $(function() {
 
-    window.addEventListener('resize', function(){
-        threeView.onWindowResize();
-    }, false);
-
-    var uiControls = initControls();
+    var $loadingModal = $("#loadingModal");
 
     var raycaster = new THREE.Raycaster();
     var mouse = new THREE.Vector2();
@@ -192,52 +189,59 @@ $(function() {
     var mouseDown = false;
     var highlightedObj;
 
-    threeView = initThreeView();
+    $loadingModal.on('shown.bs.modal', function (e) {
 
-    var $imgLoader = $("#imgLoader");
-    $imgLoader.innerWidth = imgWidth;
-    $imgLoader.innerHeight = imgHeight;
-    $imgLoader.clientWidth = imgWidth;
-    $imgLoader.clientHeight = imgHeight;
+        var uiControls = initControls();
 
-    var img = document.getElementById("heightmapSmall");
-    var context = document.getElementById('imgLoader').getContext('2d');
-    context.canvas.width = imgWidth; context.canvas.height = imgHeight;
-    context.drawImage(img, 0, 0, imgWidth, imgHeight);
-    imgdata = context.getImageData(0, 0, imgWidth, imgHeight).data;
+        threeView = initThreeView();
 
-    moon = new THREE.Mesh(geometry, moonMaterial);
-    threeView.scene.add(moon);
-    threeView.sceneDepth.add(moon.clone());
+        var $imgLoader = $("#imgLoader");
+        $imgLoader.innerWidth = imgWidth;
+        $imgLoader.innerHeight = imgHeight;
+        $imgLoader.clientWidth = imgWidth;
+        $imgLoader.clientHeight = imgHeight;
 
-    threeView.scene.add(cropCenter.object3D);
-    threeView.scene.add(cropLine);
+        var img = document.getElementById("heightmapSmall");
+        var context = document.getElementById('imgLoader').getContext('2d');
+        context.canvas.width = imgWidth; context.canvas.height = imgHeight;
+        context.drawImage(img, 0, 0, imgWidth, imgHeight);
+        imgdata = context.getImageData(0, 0, imgWidth, imgHeight).data;
 
-    threeView.scene.add(axis);
+        moon = new THREE.Mesh(geometry, moonMaterial);
+        threeView.scene.add(moon);
+        threeView.sceneDepth.add(moon.clone());
 
-    updateGeo(true);
+        threeView.scene.add(cropCenter.object3D);
+        threeView.scene.add(cropLine);
 
-    // var topPole = new THREE.Vector3(0,0,radius);
-    // var bottomPole = new THREE.Vector3(0,0,-radius);
-    // geometry.vertices.push(topPole);
-    // geometry.vertices.push(bottomPole);
-    // for (var i=1;i<imgWidth;i++) {
-    //     var index = i*imgHeight+3;
-    //     geometry.faces.push(new THREE.Face3(index, 0, index-imgHeight));
-    //     var index = i*imgHeight+1+imgHeight;
-    //     geometry.faces.push(new THREE.Face3(index, index-imgHeight, 1));
-    // }
+        threeView.scene.add(axis);
+
+        updateGeo(true);
+        $loadingModal.modal("hide");
+        $("#controls").fadeIn();
+        $("#controlsLeft").fadeIn();
+
+        window.addEventListener('resize', function(){
+            threeView.onWindowResize();
+        }, false);
+
+        document.addEventListener( 'mousedown', mouseDown, false );
+        document.addEventListener( 'mouseup', mouseUp, false );
+        document.addEventListener( 'mousemove', mouseMove, false );
+
+    });
+    $loadingModal.modal("show");
 
     $(document).dblclick(function() {
     });
 
-    document.addEventListener('mousedown', function(){
+    function mouseDown(){
         if (highlightedObj){
             threeView.enableControls(false);
         }
         mouseDown = true;
-    }, false);
-    document.addEventListener('mouseup', function(e){
+    }
+    function mouseUp(){
         if (highlightedObj) {
             cropLine.visible = false;
             updateCrop(true);
@@ -247,8 +251,7 @@ $(function() {
         axis.visible = false;
         mouseDown = false;
         threeView.render();
-    }, false);
-    document.addEventListener( 'mousemove', mouseMove, false );
+    }
     function mouseMove(e){
 
         if (mouseDown) {
