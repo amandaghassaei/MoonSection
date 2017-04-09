@@ -12,7 +12,7 @@
     <script type="text/javascript" src="dependencies/jquery-3.1.1.min.js"></script>
     <script type="text/javascript" src="dependencies/jquery-ui.min.js"></script>
     <script type="text/javascript" src="dependencies/flat-ui.min.js"></script>
-    <script type="text/javascript" src="dependencies/three.min.js"></script>
+    <script type="text/javascript" src="dependencies/three.js"></script>
     <script type="text/javascript" src="dependencies/binary_stl_writer.js"></script>
     <script type="text/javascript" src="dependencies/OrthographicTrackballControls.js"></script>
     <script type="text/javascript" src="dependencies/FileSaver.min.js"></script>
@@ -25,6 +25,7 @@
     <script type="text/javascript" src="dependencies/Detector.js"></script>
     <script type="text/javascript" src="dependencies/RenderPass.js"></script>
 
+    <script type="text/javascript" src="js/crop.js"></script>
     <script type="text/javascript" src="js/threeView.js"></script>
     <script type="text/javascript" src="js/controls.js"></script>
     <script type="text/javascript" src="js/node.js"></script>
@@ -39,7 +40,7 @@
     <a id="about" href="#" class="btn btn-lg btn-default">About</a><br/>
     <br/>
     <b>Geometry Controls:</b><br/>
-    <div class="sliderInput" id="radius">
+    <div class="sliderInput cropView" id="radius">
         <span class="label-slider">Radius (km) : </span><div class="flat-slider ui-slider ui-corner-all ui-slider-horizontal ui-widget ui-widget-content"></div>
         <input value="" placeholder="" class="form-control" type="text">
     </div>
@@ -49,7 +50,7 @@
     </div>
     <a id="reset" href="#" class="btn btn-lg btn-default">Reset Geometry to Defaults</a><br/>
     <br/><br/>
-    <div id="cropControls" class="floatRight fullWidth"><b>Crop Controls:</b><br/>
+    <div id="cropControls" class="cropView floatRight fullWidth"><b>Crop Controls:</b><br/>
         <span class="label-slider floatRight">Position (&theta;, &phi; in radians)&nbsp;&nbsp; <input id="theta" value="" placeholder="" class="form-control int" type="text">
                 &nbsp; <input id="phi" value="" placeholder="" class="form-control int" type="text"></span><br/><br/>
         <div class="sliderInput" id="cropSize">
@@ -60,8 +61,9 @@
             <span class="label-slider">Rotation (radians) : </span><div class="flat-slider ui-slider ui-corner-all ui-slider-horizontal ui-widget ui-widget-content"></div>
             <input value="" placeholder="" class="form-control" type="text">
         </div>
-        <a id="crop" href="#" class="btn btn-lg btn-default">Crop Region</a><br/>
     </div>
+    <a id="crop" href="#" class="cropView btn btn-lg btn-default">Crop Region</a><br/>
+    <a id="back" href="#" class="exportView btn btn-lg btn-default">Back to Crop Tool</a><br/>
 </div>
 <div id="controlsLeft" class="flipped">
     <div>
@@ -112,6 +114,16 @@
         <div class="modal-content">
             <div class="center modal-body">
                 <p>Loading Data...</p>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+<div class="modal fade" id="holdon" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="center modal-body">
+                <p>This may take a minute...<br/>
+                <span id="percentCompletion"></span></p>
             </div>
         </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->

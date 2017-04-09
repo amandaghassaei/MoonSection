@@ -62,7 +62,11 @@ function initControls(){
     });
 
     setLink("#crop", function(){
+        cropRegion();
+    });
 
+    setLink("#back", function(){
+        back();
     });
 
     setCheckbox("#ssao", ssao, function(state){

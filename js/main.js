@@ -28,7 +28,6 @@ for (var i=0;i<10;i++){
         squareGeo.vertices.push(new THREE.Vector3());
     }
 }
-squareGeo.vertices.push(new THREE.Vector3());
 var cropLine = new THREE.Line(squareGeo, new THREE.LineBasicMaterial({color:0xec008b}));
 
 var axis = new THREE.Line(new THREE.Geometry(), new THREE.LineBasicMaterial({color:0xaaaaaa}));
@@ -52,7 +51,6 @@ function changeMaterial(){
     threeView.render();
 }
 
-
 function updateCrop(projection){
     var rad = radius + scale*127;
     cropCenter.object3D.scale.set(radius/50, radius/50, radius/50);
@@ -62,11 +60,6 @@ function updateCrop(projection){
     cropCenter.render(centerPosition.clone());
 
     centerPosition.normalize();
-    //tangent plane
-    var a = centerPosition.x;
-    var b = centerPosition.y;
-    var c = centerPosition.z;
-    var d = -a*a-b*b-c*c;
 
     var basis1 = new THREE.Vector3(1, 0, 0);
     var basis2 = new THREE.Vector3(0, 1, 0);
@@ -92,30 +85,29 @@ function updateCrop(projection){
 
     if (projection) {
         for (var i = 0; i < 10; i++) {
-            var t = i / 10;
-            var vertex = raycastToSurface(topRight.clone().multiplyScalar(t).add(topLeft.clone().multiplyScalar(1 - t)), dir);
+            var t = i / 9;
+            var vertex = raycastToSurface(interpolate(topLeft, topRight, t), dir);
             squareGeo.vertices[i].set(vertex.x, vertex.y, vertex.z);
-            vertex = raycastToSurface(bottomRight.clone().multiplyScalar(t).add(topRight.clone().multiplyScalar(1 - t)), dir);
+            vertex = raycastToSurface(interpolate(topRight, bottomRight, t), dir);
             squareGeo.vertices[10 + i].set(vertex.x, vertex.y, vertex.z);
-            vertex = raycastToSurface(bottomLeft.clone().multiplyScalar(t).add(bottomRight.clone().multiplyScalar(1 - t)), dir);
+            vertex = raycastToSurface(interpolate(bottomRight, bottomLeft, t), dir);
             squareGeo.vertices[20 + i].set(vertex.x, vertex.y, vertex.z);
-            vertex = raycastToSurface(topLeft.clone().multiplyScalar(t).add(bottomLeft.clone().multiplyScalar(1 - t)), dir);
+            vertex = raycastToSurface(interpolate(bottomLeft, topLeft, t), dir);
             squareGeo.vertices[30 + i].set(vertex.x, vertex.y, vertex.z);
         }
     } else {
         for (var i = 0; i < 10; i++) {
-            var t = i / 10;
-            var vertex = topRight.clone().multiplyScalar(t).add(topLeft.clone().multiplyScalar(1 - t));
+            var t = i / 9;
+            var vertex = interpolate(topLeft, topRight, t);
             squareGeo.vertices[i].set(vertex.x, vertex.y, vertex.z);
-            vertex = bottomRight.clone().multiplyScalar(t).add(topRight.clone().multiplyScalar(1 - t));
+            vertex = interpolate(topRight, bottomRight, t);
             squareGeo.vertices[10 + i].set(vertex.x, vertex.y, vertex.z);
-            vertex = bottomLeft.clone().multiplyScalar(t).add(bottomRight.clone().multiplyScalar(1 - t));
+            vertex = interpolate(bottomRight, bottomLeft, t);
             squareGeo.vertices[20 + i].set(vertex.x, vertex.y, vertex.z);
-            vertex = topLeft.clone().multiplyScalar(t).add(bottomLeft.clone().multiplyScalar(1 - t));
+            vertex = interpolate(bottomLeft, topLeft, t);
             squareGeo.vertices[30 + i].set(vertex.x, vertex.y, vertex.z);
         }
     }
-    squareGeo.vertices[40].set(squareGeo.vertices[0].x, squareGeo.vertices[0].y, squareGeo.vertices[0].z);
 
     squareGeo.computeBoundingSphere();
     squareGeo.verticesNeedUpdate = true;
@@ -123,6 +115,10 @@ function updateCrop(projection){
     cropLine.visible = true;
 
     threeView.render();
+}
+
+function interpolate(from, to, t){
+    return to.clone().multiplyScalar(t).add(from.clone().multiplyScalar(1 - t));
 }
 
 function raycastToSurface(vertex, dir){
@@ -216,6 +212,8 @@ $(function() {
 
         threeView.scene.add(axis);
 
+        initRegion();
+
         updateGeo(true);
         $loadingModal.modal("hide");
         $("#controls").fadeIn();
@@ -225,23 +223,22 @@ $(function() {
             threeView.onWindowResize();
         }, false);
 
-        document.addEventListener( 'mousedown', mouseDown, false );
+        document.addEventListener( 'mousedown', mousedown, false );
         document.addEventListener( 'mouseup', mouseUp, false );
         document.addEventListener( 'mousemove', mouseMove, false );
 
     });
     $loadingModal.modal("show");
 
-    $(document).dblclick(function() {
-    });
-
-    function mouseDown(){
+    function mousedown(){
+        if (isCropping) return;
         if (highlightedObj){
             threeView.enableControls(false);
         }
         mouseDown = true;
     }
     function mouseUp(){
+        if (isCropping) return;
         if (highlightedObj) {
             cropLine.visible = false;
             updateCrop(true);
@@ -253,6 +250,8 @@ $(function() {
         threeView.render();
     }
     function mouseMove(e){
+
+        if (isCropping) return;
 
         if (mouseDown) {
             isDragging = true;
