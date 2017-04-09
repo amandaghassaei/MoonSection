@@ -27,6 +27,7 @@ for (var i=0;i<10;i++){
         squareGeo.vertices.push(new THREE.Vector3());
     }
 }
+squareGeo.vertices.push(new THREE.Vector3());
 var cropLine = new THREE.Line(squareGeo, new THREE.LineBasicMaterial({color:0xec008b}));
 
 var axis = new THREE.Line(new THREE.Geometry(), new THREE.LineBasicMaterial({color:0xaaaaaa}));
@@ -78,10 +79,23 @@ function updateCrop(){
     basis1.multiplyScalar(cropSize);
     basis2.multiplyScalar(cropSize);
 
-    squareGeo.vertices[0].set(centerPosition.x + basis1.x,centerPosition.y + basis1.y,centerPosition.z + basis1.z);
-    squareGeo.vertices[1].set(centerPosition.x + basis2.x,centerPosition.y + basis2.y,centerPosition.z + basis2.z);
-    squareGeo.vertices[2].set(centerPosition.x -basis1.x,centerPosition.y -basis1.y,centerPosition.z -basis1.z);
-    squareGeo.vertices[3].set(centerPosition.x -basis2.x,centerPosition.y -basis2.y,centerPosition.z -basis2.z);
+    var topLeft = centerPosition.clone().sub(basis1).sub(basis2);
+    var topRight = centerPosition.clone().sub(basis1).add(basis2);
+    var bottomRight = centerPosition.clone().add(basis1).add(basis2);
+    var bottomLeft = centerPosition.clone().add(basis1).sub(basis2);
+
+    for (var i=0;i<10;i++){
+        var t = i/10;
+        var vertex = topRight.clone().multiplyScalar(t).add(topLeft.clone().multiplyScalar(1-t));
+        squareGeo.vertices[i].set(vertex.x, vertex.y, vertex.z);
+        vertex = bottomRight.clone().multiplyScalar(t).add(topRight.clone().multiplyScalar(1-t));
+        squareGeo.vertices[10+i].set(vertex.x, vertex.y, vertex.z);
+        vertex = bottomLeft.clone().multiplyScalar(t).add(bottomRight.clone().multiplyScalar(1-t));
+        squareGeo.vertices[20+i].set(vertex.x, vertex.y, vertex.z);
+        vertex = topLeft.clone().multiplyScalar(t).add(bottomLeft.clone().multiplyScalar(1-t));
+        squareGeo.vertices[30+i].set(vertex.x, vertex.y, vertex.z);
+    }
+    squareGeo.vertices[40].set(squareGeo.vertices[0].x, squareGeo.vertices[0].y, squareGeo.vertices[0].z);
 
     squareGeo.computeBoundingSphere();
     squareGeo.verticesNeedUpdate = true;
@@ -139,7 +153,6 @@ $(function() {
     var raycaster = new THREE.Raycaster();
     var mouse = new THREE.Vector2();
     var isDragging = false;
-    var draggingNode = null;
     var mouseDown = false;
     var highlightedObj;
 
