@@ -5,15 +5,19 @@
 var isCropping = false;
 
 var regionResolution = 10;
-
+var fineResolution = 3;
+var resolution = regionResolution*fineResolution + 1;
+var allAngles = [];
 var regionGeo = new THREE.Geometry();
-for (var i=0;i<regionResolution;i++){
-    for (var j=0;j<regionResolution;j++) {
+for (var i=0;i<resolution;i++){
+    allAngles.push([]);
+    for (var j=0;j<resolution;j++) {
+        allAngles[i][j] = null;
         regionGeo.vertices.push(new THREE.Vector3());
         if (i>0 && j>0){
-            var index = i*regionResolution+j;
-            regionGeo.faces.push(new THREE.Face3(index-1, index, index-regionResolution));
-            regionGeo.faces.push(new THREE.Face3(index-1, index-regionResolution, index-regionResolution-1));
+            var index = i*resolution+j;
+            regionGeo.faces.push(new THREE.Face3(index-1, index, index-resolution));
+            regionGeo.faces.push(new THREE.Face3(index-1, index-resolution, index-resolution-1));
         }
     }
 }
@@ -92,22 +96,67 @@ function makeGeo(){
     var bottomRight = centerPosition.clone().add(basis1).add(basis2);
     var bottomLeft = centerPosition.clone().add(basis1).sub(basis2);
 
-
-    for (var i = 0; i < regionResolution; i++) {
-        var u = i / (regionResolution-1);
+    for (var i = 0; i < resolution; i+= fineResolution) {
+        var u = i / (resolution-1);
 
         var left = interpolate(topLeft, bottomLeft, u);
         var right = interpolate(topRight, bottomRight, u);
 
-        for (var j = 0; j < regionResolution; j++) {
-            var v = j / (regionResolution-1);
+        for (var j = 0; j < resolution; j+= fineResolution) {
+            var v = j / (resolution-1);
 
-            $completion.html(parseInt((i*regionResolution+j)/regionResolution/regionResolution*100)+"%");
+            // $completion.html(parseInt((i*regionResolution+j)/regionResolution/regionResolution*100)+"%");
 
             var vertex = raycastOnSurface(interpolate(left, right, v), dir);
-            regionGeo.vertices[i*regionResolution+j].set(vertex.x, vertex.y, vertex.z);
+            var angles = getAngularCoordinates(vertex);
+            allAngles[i][j] = angles;
+
+            vertex = makeVertexWithVal(getInterpolatedPxValue(angles), angles);
+
+            regionGeo.vertices[i*resolution+j].set(vertex.x, vertex.y, vertex.z);
         }
     }
+
+    for (var i = fineResolution; i < resolution; i += fineResolution) {
+        for (var j = fineResolution; j < resolution; j += fineResolution) {
+
+            var ne = regionGeo.vertices[(i-fineResolution)*resolution+j];
+            var se = regionGeo.vertices[i*resolution+j];
+            var sw = regionGeo.vertices[i*resolution+j-fineResolution];
+            var nw = regionGeo.vertices[(i-fineResolution)*resolution+j-fineResolution];
+
+            for (var a = 0; a < fineResolution; a++) {
+                var u = a / fineResolution;
+
+                var left = interpolate(nw, sw, u);
+                var right = interpolate(ne, se, u);
+
+                for (var b = 0; b < fineResolution; b++) {
+                    var v = b / fineResolution;
+
+                    var vertex = interpolate(left, right, v);
+                    regionGeo.vertices[(i-fineResolution+a)*resolution+j-fineResolution+b].set(vertex.x, vertex.y, vertex.z);
+                }
+            }
+
+            if (i==resolution-1) {
+                for (var b = 0; b < fineResolution; b++) {
+                    var v = b / fineResolution;
+                    var vertex = interpolate(sw, se, v);
+                    regionGeo.vertices[i * resolution + j - fineResolution + b].set(vertex.x, vertex.y, vertex.z);
+                }
+            }
+            if (j==resolution-1){
+                for (var a = 0; a < fineResolution; a++) {
+                    var v = a / fineResolution;
+                    var vertex = interpolate(ne, se, v);
+                    regionGeo.vertices[(i-fineResolution+a)* resolution + j].set(vertex.x, vertex.y, vertex.z);
+                }
+            }
+
+        }
+    }
+
     regionGeo.center();
     regionGeo.computeFaceNormals();
     regionGeo.computeBoundingSphere();
@@ -115,7 +164,37 @@ function makeGeo(){
 
     region.visible = true;
 
+    // wireframe
+    var geo = new THREE.WireframeGeometry( regionGeo); // or WireframeGeometry
+    var mat = new THREE.LineBasicMaterial( {color: 0xff0000} );
+    var wireframe = new THREE.LineSegments( geo, mat );
+    region.add( wireframe );
+
     threeView.render();
+}
+
+function makeVertexWithVal(val, angles){
+    var rad = radius + scale*(val-val/2);
+    var RsinPhi = rad*Math.sin(angles.y);
+    var RcosPhi = rad*Math.cos(angles.y);
+    return new THREE.Vector3(RsinPhi*Math.cos(angles.x), RsinPhi*Math.sin(angles.x), RcosPhi);
+}
+
+function getInterpolatedPxValue(angles){
+    var index = new THREE.Vector2(imgWidth*(angles.x/Math.PI/2), imgHeight*(angles.y/Math.PI));
+    var neIndex = index.clone().ceil();
+    var swindex = index.clone().floor();
+    var ne = imgdata[4*(neIndex.y*imgWidth+neIndex.x)];
+    var se = imgdata[4*(swindex.y*imgWidth+neIndex.x)];
+    var sw = imgdata[4*(swindex.y*imgWidth+swindex.x)];
+    var nw = imgdata[4*(neIndex.y*imgWidth+swindex.x)];
+
+    var dist = index.sub(swindex);
+
+    var n = (ne*dist.x+nw*(1-dist.x))/2;
+    var s = (se*dist.x+sw*(1-dist.x))/2;
+
+    return (n*dist.y+s*(1-dist.y))/2;
 }
 
 function raycastOnSurface(vertex, dir){

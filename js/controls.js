@@ -77,7 +77,7 @@ function initControls(){
         }
         else {
             directionalLight1.intensity = 0.7;
-            ambientLight.intensity = 0.2;
+            ambientLight.intensity = 0.25;
         }
         threeView.render();
     });

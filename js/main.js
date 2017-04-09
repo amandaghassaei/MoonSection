@@ -131,14 +131,19 @@ function raycastToSurface(vertex, dir){
     return intersection[0].point.sub(dir.clone().multiplyScalar(scale*255));
 }
 
-function projectToSurface(vertex){
+function getAngularCoordinates(vertex){
     vertex.normalize();
     var phi = Math.acos(vertex.z);
     var theta = Math.atan2(vertex.y, vertex.x);
+    return new THREE.Vector2(theta, phi);
+}
+
+function projectToSurface(vertex){
+    var angles = getAngularCoordinates(vertex);
     var rad = radius + scale*255;
-    var RsinPhi = rad*Math.sin(phi);
-    var RcosPhi = rad*Math.cos(phi);
-    vertex.set(RsinPhi*Math.cos(theta), RsinPhi* Math.sin(theta), RcosPhi);
+    var RsinPhi = rad*Math.sin(angles.y);
+    var RcosPhi = rad*Math.cos(angles.y);
+    vertex.set(RsinPhi*Math.cos(angles.x), RsinPhi* Math.sin(angles.x), RcosPhi);
     return vertex;
 }
 
