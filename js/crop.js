@@ -6,6 +6,9 @@ var isCropping = false;
 
 var baseThickness = 1;
 
+var moonMaterial = new THREE.MeshLambertMaterial({color:0xffffff, shading:THREE.FlatShading});
+var normalMaterial = new THREE.MeshNormalMaterial();
+
 var regionResolution = 10;
 var fineResolution = 30;
 var resolution = regionResolution*fineResolution + 1;
@@ -76,7 +79,7 @@ for (var i=1;i<resolution;i++){
 
 
 regionGeo.dynamic = true;
-var region = new THREE.Mesh(regionGeo, new THREE.MeshLambertMaterial({color:0xffffff, shading:THREE.FlatShading}));
+var region = new THREE.Mesh(regionGeo, moonMaterial);
 region.visible = false;
 
 var $holdon, $completion;
@@ -101,6 +104,8 @@ function cropRegion(){
         cropCenter.hide();
         threeView.render();
 
+        directionalLight2.intensity = 0.3;
+
         makeGeo();
         $holdon.modal("hide");
     });
@@ -114,11 +119,15 @@ function back(){
     $(".cropView").show();
     $(".exportView").hide();
 
+    directionalLight2.intensity = 0.0;
+
     region.visible = false;
     moon.visible = true;
     cropLine.visible = true;
     axis.visible = true;
     threeView.render();
+
+    updateGeo(false);
 }
 
 function makeGeo(){

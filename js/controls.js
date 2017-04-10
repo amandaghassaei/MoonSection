@@ -19,17 +19,14 @@ function initControls(){
         scale = val/255;
         if (isCropping) updateRegionSurface();
     });
-    setSliderInputStop("#scale", scale*255, 0, 1000, 1, function(val){
-        scale = val/255;
-        if (!isCropping) updateGeo();
-    });
 
     setLink("#reset", function(){
         radius = defaultRadius;
         updateSliderInput("#radius", radius);
         scale = defaultScale;
         updateSliderInput("#scale", scale*255);
-        updateGeo();
+        if (isCropping) updateRegionSurface();
+        else updateGeo();
     });
 
     setInput("#theta", cropPosition.x, function(val){

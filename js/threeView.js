@@ -2,7 +2,7 @@
  * Created by ghassaei on 9/16/16.
  */
 
-var directionalLight1, ambientLight;
+var directionalLight1, directionalLight2, ambientLight;
 
 function initThreeView() {
 
@@ -35,6 +35,9 @@ function initThreeView() {
         directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.7);
         directionalLight1.position.set(-10000, 10000, 10000);
         camera.add(directionalLight1);
+        directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.0);
+        directionalLight2.position.set(10000, -10000, -10000);
+        camera.add(directionalLight2);
         ambientLight = new THREE.AmbientLight(0x000044, 0.25);
         scene.add(ambientLight);
 

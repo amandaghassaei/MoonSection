@@ -35,8 +35,6 @@ axis.geometry.vertices.push(new THREE.Vector3(0,0,1));
 axis.geometry.vertices.push(new THREE.Vector3(0,0,-1));
 
 var useNormalMaterial = false;
-var moonMaterial = new THREE.MeshLambertMaterial({color:0xffffff, shading:THREE.FlatShading});
-var normalMaterial = new THREE.MeshNormalMaterial();
 
 var ssao = false;
 
@@ -45,14 +43,16 @@ var projRaycaster = new THREE.Raycaster();
 function changeMaterial(){
     if (useNormalMaterial){
         moon.material = normalMaterial;
+        region.material = normalMaterial;
     } else {
         moon.material = moonMaterial;
+        region.material = moonMaterial;
     }
     threeView.render();
 }
 
 function updateCrop(projection){
-    var rad = radius + scale*127;
+    var rad = radius + defaultScale*127;
     cropCenter.object3D.scale.set(radius/50, radius/50, radius/50);
     var centerPosition = new THREE.Vector3(rad*Math.sin(cropPosition.y)*Math.cos(cropPosition.x),
         rad*Math.sin(cropPosition.y)*Math.sin(cropPosition.x),
@@ -112,8 +112,6 @@ function updateCrop(projection){
     squareGeo.computeBoundingSphere();
     squareGeo.verticesNeedUpdate = true;
 
-    cropLine.visible = true;
-
     threeView.render();
 }
 
@@ -128,7 +126,7 @@ function raycastToSurface(vertex, dir){
         console.warn("no intersection");
         return new THREE.Vector3();
     }
-    return intersection[0].point.sub(dir.clone().multiplyScalar(scale*255));
+    return intersection[0].point.sub(dir.clone().multiplyScalar(defaultScale*255));
 }
 
 function getAngularCoordinates(vertex){
@@ -140,7 +138,7 @@ function getAngularCoordinates(vertex){
 
 function projectToSurface(vertex){
     var angles = getAngularCoordinates(vertex);
-    var rad = radius + scale*255;
+    var rad = radius + defaultScale*255;
     var RsinPhi = rad*Math.sin(angles.y);
     var RcosPhi = rad*Math.cos(angles.y);
     vertex.set(RsinPhi*Math.cos(angles.x), RsinPhi* Math.sin(angles.x), RcosPhi);
@@ -156,7 +154,7 @@ function updateGeo(makeFaces){
         for (var j=0;j<imgHeight;j++){
             var index = i*imgHeight + j;
             var pxVal = imgdata[4*(j*imgWidth + i)];
-            var rad = radius + scale*(pxVal-pxVal/2);
+            var rad = radius + defaultScale*(pxVal-pxVal/2);
             var phi = Math.PI*j/(imgHeight-1);
             var RsinPhi = rad*Math.sin(phi);
             var RcosPhi = rad*Math.cos(phi);
@@ -245,7 +243,6 @@ $(function() {
     function mouseUp(){
         if (isCropping) return;
         if (highlightedObj) {
-            cropLine.visible = false;
             updateCrop(true);
         }
         isDragging = false;
