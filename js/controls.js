@@ -21,12 +21,15 @@ function initControls(){
     });
 
     setLink("#reset", function(){
-        radius = defaultRadius;
-        updateSliderInput("#radius", radius);
-        scale = defaultScale;
-        updateSliderInput("#scale", scale*255);
-        if (isCropping) updateRegionSurface();
-        else updateGeo();
+        if (isCropping) {
+            scale = defaultScale;
+            updateSliderInput("#scale", scale*255);
+            updateRegionSurface();
+        } else {
+            radius = defaultRadius;
+            updateSliderInput("#radius", radius);
+            updateGeo();
+        }
     });
 
     setInput("#theta", cropPosition.x, function(val){

@@ -9,6 +9,8 @@ var baseThickness = 1;
 var moonMaterial = new THREE.MeshLambertMaterial({color:0xffffff, shading:THREE.FlatShading});
 var normalMaterial = new THREE.MeshNormalMaterial();
 
+var cornerPositions = [null, null, null, null];
+
 var regionResolution = 10;
 var fineResolution = 30;
 var resolution = regionResolution*fineResolution + 1;
@@ -63,7 +65,9 @@ for (var i=0;i<resolution;i++){
         regionGeo.faces.push(new THREE.Face3(index - 1, _i-resolution, _i));
     }
 }
-regionGeo.vertices.push(new THREE.Vector3());
+for (var i=0;i<5;i++) {
+    regionGeo.vertices.push(new THREE.Vector3());
+}
 for (var i=1;i<resolution;i++){
     regionGeo.faces.push(new THREE.Face3(resolution*resolution+i-1, resolution*resolution+i, regionGeo.vertices.length-1));
 }
@@ -86,6 +90,7 @@ var $holdon, $completion;
 
 function initRegion(){
     threeView.scene.add(region);
+    threeView.sceneDepth.add(region.clone());
     $holdon = $("#holdon");
     $completion = $("#percentCompletion");
 }
@@ -107,6 +112,7 @@ function cropRegion(){
         directionalLight2.intensity = 0.3;
 
         makeGeo();
+        threeView.render();
         $holdon.modal("hide");
     });
     $holdon.modal("show");
@@ -234,6 +240,19 @@ function makeGeo(){
         }
     }
 
+    vertex = intersectionWithSphere(topLeft, dir);
+    regionGeo.vertices[regionGeo.vertices.length-4].set(vertex.x, vertex.y, vertex.z);
+    cornerPositions[0] = regionGeo.vertices[regionGeo.vertices.length-4];
+    vertex = intersectionWithSphere(topRight, dir);
+    regionGeo.vertices[regionGeo.vertices.length-3].set(vertex.x, vertex.y, vertex.z);
+    cornerPositions[1] = regionGeo.vertices[regionGeo.vertices.length-3];
+    vertex = intersectionWithSphere(bottomRight, dir);
+    regionGeo.vertices[regionGeo.vertices.length-2].set(vertex.x, vertex.y, vertex.z);
+    cornerPositions[2] = regionGeo.vertices[regionGeo.vertices.length-2];
+    vertex = intersectionWithSphere(bottomLeft, dir);
+    regionGeo.vertices[regionGeo.vertices.length-1].set(vertex.x, vertex.y, vertex.z);
+    cornerPositions[3] = regionGeo.vertices[regionGeo.vertices.length-1];
+
     regionGeo.center();
     regionGeo.computeFaceNormals();
     regionGeo.computeBoundingSphere();
@@ -271,35 +290,33 @@ function updateRegionBase(){
         Math.cos(cropPosition.y));
     var dir = centerPosition.clone().normalize().multiplyScalar(-baseThickness*100);
 
-    //curved base
-    // for (var i=0;i<resolution;i++){
-    //     var vertex = dir.clone().multiplyScalar(-baseThickness*100).add(regionGeo.vertices[i]);
-    //     regionGeo.vertices[resolution*resolution+i].set(vertex.x, vertex.y, vertex.z);
-    // }
+    //todo get base min
 
-    var min = dir.clone().add(regionGeo.vertices[0]);
-    var max = dir.clone().add(regionGeo.vertices[resolution-1]);
+    console.log(cornerPositions[0]);
+
+    var min = dir.clone().add(cornerPositions[0]);
+    var max = dir.clone().add(cornerPositions[1]);
     for (var i=0;i<resolution;i++){
         var t = i/(resolution-1);
         var vertex = interpolate(min, max, t);
         regionGeo.vertices[resolution*resolution+i].set(vertex.x, vertex.y, vertex.z);
     }
-    min = dir.clone().add(regionGeo.vertices[resolution*(resolution-1)]);
-    max = dir.clone().add(regionGeo.vertices[resolution*resolution-1]);
+    min = dir.clone().add(cornerPositions[3]);
+    max = dir.clone().add(cornerPositions[2]);
     for (var i=0;i<resolution;i++){
         var t = i/(resolution-1);
         var vertex = interpolate(min, max, t);
         regionGeo.vertices[resolution*(resolution+1)+i].set(vertex.x, vertex.y, vertex.z);
     }
-    min = dir.clone().add(regionGeo.vertices[0]);
-    max = dir.clone().add(regionGeo.vertices[resolution*(resolution-1)]);
+    min = dir.clone().add(cornerPositions[0]);
+    max = dir.clone().add(cornerPositions[3]);
     for (var i=0;i<resolution;i++){
         var t = i/(resolution-1);
         var vertex = interpolate(min, max, t);
         regionGeo.vertices[resolution*(resolution+2)+i].set(vertex.x, vertex.y, vertex.z);
     }
-    min = dir.clone().add(regionGeo.vertices[resolution-1]);
-    max = dir.clone().add(regionGeo.vertices[resolution*resolution-1]);
+    min = dir.clone().add(cornerPositions[1]);
+    max = dir.clone().add(cornerPositions[2]);
     for (var i=0;i<resolution;i++){
         var t = i/(resolution-1);
         var vertex = interpolate(min, max, t);
@@ -307,7 +324,7 @@ function updateRegionBase(){
     }
 
     var vertex = interpolate(dir.clone().add(regionGeo.vertices[0]), max, 0.5);
-    regionGeo.vertices[regionGeo.vertices.length-1].set(vertex.x, vertex.y, vertex.z);
+    regionGeo.vertices[regionGeo.vertices.length-5].set(vertex.x, vertex.y, vertex.z);
 
 
     regionGeo.center();

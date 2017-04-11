@@ -83,36 +83,52 @@ function updateCrop(projection){
     var bottomLeft = centerPosition.clone().add(basis1).sub(basis2);
 
 
-    if (projection) {
+    // if (projection) {
+    var offset = dir.clone().multiplyScalar(-defaultScale*200);
         for (var i = 0; i < 10; i++) {
             var t = i / 9;
-            var vertex = raycastToSurface(interpolate(topLeft, topRight, t), dir);
+            var vertex = intersectionWithSphere(interpolate(topLeft, topRight, t), dir).add(offset);
             squareGeo.vertices[i].set(vertex.x, vertex.y, vertex.z);
-            vertex = raycastToSurface(interpolate(topRight, bottomRight, t), dir);
+            vertex = intersectionWithSphere(interpolate(topRight, bottomRight, t), dir).add(offset);
             squareGeo.vertices[10 + i].set(vertex.x, vertex.y, vertex.z);
-            vertex = raycastToSurface(interpolate(bottomRight, bottomLeft, t), dir);
+            vertex = intersectionWithSphere(interpolate(bottomRight, bottomLeft, t), dir).add(offset);
             squareGeo.vertices[20 + i].set(vertex.x, vertex.y, vertex.z);
-            vertex = raycastToSurface(interpolate(bottomLeft, topLeft, t), dir);
+            vertex = intersectionWithSphere(interpolate(bottomLeft, topLeft, t), dir).add(offset);
             squareGeo.vertices[30 + i].set(vertex.x, vertex.y, vertex.z);
         }
-    } else {
-        for (var i = 0; i < 10; i++) {
-            var t = i / 9;
-            var vertex = interpolate(topLeft, topRight, t);
-            squareGeo.vertices[i].set(vertex.x, vertex.y, vertex.z);
-            vertex = interpolate(topRight, bottomRight, t);
-            squareGeo.vertices[10 + i].set(vertex.x, vertex.y, vertex.z);
-            vertex = interpolate(bottomRight, bottomLeft, t);
-            squareGeo.vertices[20 + i].set(vertex.x, vertex.y, vertex.z);
-            vertex = interpolate(bottomLeft, topLeft, t);
-            squareGeo.vertices[30 + i].set(vertex.x, vertex.y, vertex.z);
-        }
-    }
+    // } else {
+    //     for (var i = 0; i < 10; i++) {
+    //         var t = i / 9;
+    //         var vertex = interpolate(topLeft, topRight, t);
+    //         squareGeo.vertices[i].set(vertex.x, vertex.y, vertex.z);
+    //         vertex = interpolate(topRight, bottomRight, t);
+    //         squareGeo.vertices[10 + i].set(vertex.x, vertex.y, vertex.z);
+    //         vertex = interpolate(bottomRight, bottomLeft, t);
+    //         squareGeo.vertices[20 + i].set(vertex.x, vertex.y, vertex.z);
+    //         vertex = interpolate(bottomLeft, topLeft, t);
+    //         squareGeo.vertices[30 + i].set(vertex.x, vertex.y, vertex.z);
+    //     }
+    // }
 
     squareGeo.computeBoundingSphere();
     squareGeo.verticesNeedUpdate = true;
 
     threeView.render();
+}
+
+function intersectionWithSphere(vertex, dir){
+    var a = dir.clone().dot(dir);
+    var b = (vertex.clone().dot(dir))*2;
+    var c = vertex.clone().dot(vertex) - radius*radius;
+
+    var root = b*b-4*a*c;
+
+    if (root<=0){
+        console.warn("bad intersection");
+    }
+
+    var t = (-b-Math.sqrt(root))/(2*a);
+    return vertex.clone().add(dir.clone().multiplyScalar(t));
 }
 
 function interpolate(from, to, t){
